@@ -13,10 +13,17 @@ git clone https://github.com/ConnectEdge/label-me-ding.git
 Below shows how to build the standalone executable on Windows.  
 
 ```bash
+# install pip
+python get-pip.py
 # Build the standalone executable
 pip install .
+# if it is error "ModuleNotFoundError"
+pip install qtpy
 pip install pyinstaller
+# run follow command
 pyinstaller labelme.spec
+
+# show version
 dist/labelme --version
 ```
 
