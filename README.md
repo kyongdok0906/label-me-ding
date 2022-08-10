@@ -26,8 +26,3 @@ pyinstaller labelme.spec
 # show version
 dist/labelme --version
 ```
-
-## How to contribute
-```bash
-pip install -r requirements-dev.txt
-```
