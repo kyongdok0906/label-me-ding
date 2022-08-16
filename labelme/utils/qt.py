@@ -1,6 +1,6 @@
 from math import sqrt
 import os.path as osp
-
+import time
 import numpy as np
 
 from qtpy import QtCore
@@ -9,6 +9,11 @@ from qtpy import QtWidgets
 
 
 here = osp.dirname(osp.abspath(__file__))
+
+
+def newLang(lang: str):
+    trans_dir = osp.join(here, "../translate")
+    return osp.join(":/", trans_dir, "%s.qm" % lang)
 
 
 def newIcon(icon):
@@ -98,3 +103,20 @@ def distancetoline(point, line):
 def fmtShortcut(text):
     mod, key = text.split("+", 1)
     return "<b>%s</b>+<b>%s</b>" % (mod, key)
+
+
+def LogPrint(error: str):
+    current_time = time.strftime("%Y.%m.%d/%H:%M:%S", time.localtime(time.time()))
+    with open("Log.txt", "a") as f:
+        f.write(f"[{current_time}] - {error}\n")
+        f.close()
+
+
+def httpReq():
+    """
+        url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/login'
+        headers = {'Authorization': 'Bearer AC58C3FEC1C7FF29C5EA4A881069E47867CE9368'}
+        data = {'user_id': uname, 'password': pwd}
+        respone = requests.post(url, headers=headers, json=data)
+        jsstr = respone.json()
+    """

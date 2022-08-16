@@ -1,0 +1,24 @@
+[2022.08.15/04:34:48] - exist labelme ini
+[2022.08.15/04:35:05] - log lang is null
+[2022.08.15/04:37:01] - exist labelme ini
+[2022.08.15/04:37:13] - log lang is ko_KR
+[2022.08.15/23:34:03] - exist labelme ini
+[2022.08.15/23:34:30] - log lang is ko_KR
+[2022.08.16/00:04:14] - exist labelme ini
+[2022.08.16/00:04:26] - log lang is null
+[2022.08.16/00:17:30] - exist labelme ini
+[2022.08.16/00:18:25] - log lang is null
+[2022.08.16/00:18:56] - exist labelme ini
+[2022.08.16/00:19:07] - log lang is null
+[2022.08.16/00:19:51] - exist labelme ini
+[2022.08.16/00:20:00] - log lang is null
+[2022.08.16/10:50:52] - exist labelme ini
+[2022.08.16/10:51:25] - log lang is null
+[2022.08.16/11:09:34] - exist labelme ini
+[2022.08.16/11:09:49] - log lang is null
+[2022.08.16/11:14:00] - exist labelme ini
+[2022.08.16/11:14:08] - log lang is null
+[2022.08.16/11:15:19] - exist labelme ini
+[2022.08.16/11:15:28] - log lang is null
+[2022.08.16/11:20:42] - exist labelme ini
+[2022.08.16/11:21:00] - log lang is ko_KR

@@ -1,30 +1,28 @@
-## Requirements
+# Guide Labelme 
+## 1. Setting
+The python must to install on system
 
-- Windows
-- Python3
-- [PyQt5 / PySide2](http://www.riverbankcomputing.co.uk/software/pyqt/intro)
-## fetch from github
+The python can download in <a href="https://www.python.org/downloads/">here</a> .
 
-```bash
-git clone https://github.com/ConnectEdge/label-me-ding.git
-```
+## 2 For development
+### install pip 
 
-## for Developing
-```bash
-# install pip
-python get-pip.py
-pip install -r requirements-dev.txt  
+python -m pip install --upgrade pip
 
-# if it is error "ModuleNotFoundError"
-pip install qtpy
+or
+
+python -m pip install --upgrade --force-reinstall pip
+
+### install pyinstaller
 pip install pyinstaller
-```
-## Below shows how to build the standalone executable on Windows.  
 
-```bash
-# run follow command
+### install all package 
+
+python setup.py install
+
+## 3 How to build an independent app that runs in Wondow
+
 pyinstaller labelme.spec
 
-# show version
-dist/labelme --version
-```
+### Build path
+dist/labelme.exe

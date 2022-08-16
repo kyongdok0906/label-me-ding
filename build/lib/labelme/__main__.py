@@ -1,20 +1,17 @@
 import argparse
 import codecs
 import logging
-import os
 import os.path as osp
 import sys
 import yaml
-
-from qtpy import QtCore
-from qtpy import QtWidgets
-
-from labelme import __appname__
-from labelme import __version__
+from qtpy import QtCore, QtWidgets
+from labelme import __appname__, __version__
 from labelme.app import MainWindow
 from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon
+from labelme.utils.processini import *
+from labelme.utils.function import *
 
 
 def main():
@@ -160,15 +157,40 @@ def main():
         else:
             output_dir = output
 
-    translator = QtCore.QTranslator()
-    translator.load(
-        QtCore.QLocale.system().name(),
-        osp.dirname(osp.abspath(__file__)) + "/translate",
-    )
-    app = QtWidgets.QApplication(sys.argv)
+    local_lang = config["local_lang"] if config["local_lang"] is not None else QtCore.QLocale.system().name()
+
+    # start get lang of UI
+    labele_ini = os.getcwd() + '/labelme.ini'
+    iniCls = ProcessINI(labele_ini, "sec_lang", "local_lang")
+    if iniCls.hasINIFile() is True:
+        iniCls.loadSectionKeys()
+        LogPrint(str("labelme ini is ok"))
+    else:
+        iniCls.createConfigFile()
+        LogPrint(str("labelme ini is non so created"))
+
+    lang = iniCls.getValue()
+    if lang and lang != 'null':
+        local_lang = lang
+    # end get lang of UI
+    LogPrint(str(local_lang))
+
+    app = QtWidgets.QApplication()
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("icon"))
-    app.installTranslator(translator)
+
+    translator = QtCore.QTranslator()
+    if translator.load(
+        "ko_KR.qm",
+        "D:\\"
+        # osp.dirname(osp.abspath(__file__)) + "/translate",
+    ):
+        app.installTranslator(translator)
+        LogPrint(str("loaded translator"))
+    else:
+        LogPrint(str("non loaded translator"))
+
+    config["local_lang"] = local_lang
     win = MainWindow(
         config=config,
         filename=filename,

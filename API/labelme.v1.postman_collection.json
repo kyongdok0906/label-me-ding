@@ -1,0 +1,433 @@
+{
+	"info": {
+		"_postman_id": "290630fd-a48b-42b4-bf7e-e4acca623df0",
+		"name": "labelme.v1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3972114"
+	},
+	"item": [
+		{
+			"name": "login",
+			"item": [
+				{
+					"name": "login success",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer AC58C3FEC1C7FF29C5EA4A881069E47867CE9368",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"demo\",\r\n    \"password\": \"demo1234\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/login",
+							"protocol": "https",
+							"host": [
+								"gb9fb258fe17506-apexdb",
+								"adb",
+								"ap-seoul-1",
+								"oraclecloudapps",
+								"com"
+							],
+							"path": [
+								"ords",
+								"lm",
+								"v1",
+								"labelme",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login auth fail",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer AC58C3FEC1C7FF29C5EA4A881069E47867CE936",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"demo\",\r\n    \"password\": \"demo1234\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/login",
+							"protocol": "https",
+							"host": [
+								"gb9fb258fe17506-apexdb",
+								"adb",
+								"ap-seoul-1",
+								"oraclecloudapps",
+								"com"
+							],
+							"path": [
+								"ords",
+								"lm",
+								"v1",
+								"labelme",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login user_id not found",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer AC58C3FEC1C7FF29C5EA4A881069E47867CE9368",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"demoo\",\r\n    \"password\": \"demo1234\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/login",
+							"protocol": "https",
+							"host": [
+								"gb9fb258fe17506-apexdb",
+								"adb",
+								"ap-seoul-1",
+								"oraclecloudapps",
+								"com"
+							],
+							"path": [
+								"ords",
+								"lm",
+								"v1",
+								"labelme",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login password not correct",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer AC58C3FEC1C7FF29C5EA4A881069E47867CE9368",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"demo\",\r\n    \"password\": \"demo12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/login",
+							"protocol": "https",
+							"host": [
+								"gb9fb258fe17506-apexdb",
+								"adb",
+								"ap-seoul-1",
+								"oraclecloudapps",
+								"com"
+							],
+							"path": [
+								"ords",
+								"lm",
+								"v1",
+								"labelme",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "versions",
+			"item": [
+				{
+					"name": ":filename",
+					"item": [
+						{
+							"name": "versions/:filename success",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/versions/:filename",
+									"protocol": "https",
+									"host": [
+										"gb9fb258fe17506-apexdb",
+										"adb",
+										"ap-seoul-1",
+										"oraclecloudapps",
+										"com"
+									],
+									"path": [
+										"ords",
+										"lm",
+										"v1",
+										"labelme",
+										"versions",
+										":filename"
+									],
+									"variable": [
+										{
+											"key": "filename",
+											"value": "labelme.png"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "versions success",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 61795BBF7214848B3E9A53C794E2A544E02ABAAF",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/versions",
+							"protocol": "https",
+							"host": [
+								"gb9fb258fe17506-apexdb",
+								"adb",
+								"ap-seoul-1",
+								"oraclecloudapps",
+								"com"
+							],
+							"path": [
+								"ords",
+								"lm",
+								"v1",
+								"labelme",
+								"versions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "versions auth fail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 61795BBF7214848B3E9A53C794E2A544E02ABAA",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/versions",
+							"protocol": "https",
+							"host": [
+								"gb9fb258fe17506-apexdb",
+								"adb",
+								"ap-seoul-1",
+								"oraclecloudapps",
+								"com"
+							],
+							"path": [
+								"ords",
+								"lm",
+								"v1",
+								"labelme",
+								"versions"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "codes",
+			"item": [
+				{
+					"name": "labels",
+					"item": [
+						{
+							"name": "labels success",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer 59251FAE618810FFA46182127772C086493FB958",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/labels",
+									"protocol": "https",
+									"host": [
+										"gb9fb258fe17506-apexdb",
+										"adb",
+										"ap-seoul-1",
+										"oraclecloudapps",
+										"com"
+									],
+									"path": [
+										"ords",
+										"lm",
+										"v1",
+										"labelme",
+										"codes",
+										"labels"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "labels Auth fail",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer 59251FAE618810FFA46182127772C086493FB95",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/labels",
+									"protocol": "https",
+									"host": [
+										"gb9fb258fe17506-apexdb",
+										"adb",
+										"ap-seoul-1",
+										"oraclecloudapps",
+										"com"
+									],
+									"path": [
+										"ords",
+										"lm",
+										"v1",
+										"labelme",
+										"codes",
+										"labels"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "grades",
+					"item": [
+						{
+							"name": "grades success",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer E73E8F2B47D2B1D0611741859A247E473A45687E",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/grades",
+									"protocol": "https",
+									"host": [
+										"gb9fb258fe17506-apexdb",
+										"adb",
+										"ap-seoul-1",
+										"oraclecloudapps",
+										"com"
+									],
+									"path": [
+										"ords",
+										"lm",
+										"v1",
+										"labelme",
+										"codes",
+										"grades"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "grades Auth fail",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer 59251FAE618810FFA46182127772C086493FB95",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/grades",
+									"protocol": "https",
+									"host": [
+										"gb9fb258fe17506-apexdb",
+										"adb",
+										"ap-seoul-1",
+										"oraclecloudapps",
+										"com"
+									],
+									"path": [
+										"ords",
+										"lm",
+										"v1",
+										"labelme",
+										"codes",
+										"grades"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

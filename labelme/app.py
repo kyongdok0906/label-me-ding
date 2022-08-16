@@ -7,6 +7,7 @@ import os
 import os.path as osp
 import re
 import webbrowser
+#import ctypes
 
 import imgviz
 import natsort
@@ -14,6 +15,7 @@ from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy import QtWidgets
+# from win32api import GetSystemMetrics
 
 from labelme import __appname__
 from labelme import PY2
@@ -33,6 +35,8 @@ from labelme.widgets import LabelListWidgetItem
 from labelme.widgets import ToolBar
 from labelme.widgets import UniqueLabelQListWidget
 from labelme.widgets import ZoomWidget
+
+from labelme.utils.qt import LogPrint
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -56,6 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
         output_file=None,
         output_dir=None,
     ):
+
         if output is not None:
             logger.warning(
                 "argument output is deprecated, use output_file instead"
@@ -88,6 +93,7 @@ class MainWindow(QtWidgets.QMainWindow):
         Shape.point_size = self._config["shape"]["point_size"]
 
         super(MainWindow, self).__init__()
+
         self.setWindowTitle(__appname__)
 
         # Whether we need to save or not.
@@ -454,7 +460,26 @@ class MainWindow(QtWidgets.QMainWindow):
             icon="help",
             tip=self.tr("Show tutorial page"),
         )
-
+        """
+        lang_En = action(
+            self.tr("&English"),
+            self.changelangEn,
+            icon=None,
+            tip=self.tr("Convert to English"),
+        )
+        lang_Ko = action(
+            self.tr("&Korean"),
+            self.changelangKo,
+            icon=None,
+            tip=self.tr("Convert to Korean"),
+        )
+        lang_Zh = action(
+            self.tr("&Chinese"),
+            self.changelangZh,
+            icon=None,
+            tip=self.tr("Convert to Chinese"),
+        )
+        """
         zoom = QtWidgets.QWidgetAction(self)
         zoom.setDefaultWidget(self.zoomWidget)
         self.zoomWidget.setWhatsThis(
@@ -667,6 +692,7 @@ class MainWindow(QtWidgets.QMainWindow):
             edit=self.menu(self.tr("&Edit")),
             view=self.menu(self.tr("&View")),
             help=self.menu(self.tr("&Help")),
+            # lang=self.menu(self.tr("&Language")),
             recentFiles=QtWidgets.QMenu(self.tr("Open &Recent")),
             labelList=labelMenu,
         )
@@ -691,6 +717,16 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
         )
         utils.addActions(self.menus.help, (help,))
+        """
+        utils.addActions(
+            self.menus.lang,
+            (
+                lang_En,
+                lang_Ko,
+                lang_Zh,
+             )
+        )
+        """
         utils.addActions(
             self.menus.view,
             (
@@ -791,10 +827,15 @@ class MainWindow(QtWidgets.QMainWindow):
         # Restore application settings.
         self.settings = QtCore.QSettings("labelme", "labelme")
         self.recentFiles = self.settings.value("recentFiles", []) or []
+
         size = self.settings.value("window/size", QtCore.QSize(600, 500))
+        # user32 = ctypes.windll.user32
+        # size = self.settings.value("window/size", QtCore.QSize(user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)))
+
         position = self.settings.value("window/position", QtCore.QPoint(0, 0))
         state = self.settings.value("window/state", QtCore.QByteArray())
         self.resize(size)
+        self.showMaximized()
         self.move(position)
         # or simply:
         # self.restoreGeometry(settings['window/geometry']
@@ -938,6 +979,48 @@ class MainWindow(QtWidgets.QMainWindow):
     def tutorial(self):
         url = "https://github.com/wkentaro/labelme/tree/main/examples/tutorial"  # NOQA
         webbrowser.open(url)
+
+    def changelangEn(self):
+        print("lang : en : pre lang is " + self._config["local_lang"])
+        if self._config["local_lang"] != "en_US.qm" or self._config["local_lang"] != "null":
+            self._app.removeTranslator(self._trans_obj)
+            translator = QtCore.QTranslator(self._app)
+            if translator.load(os.getcwd() + "\\translate\\en_US.qm"):
+                self._app.installTranslator(translator)
+                self._config["local_lang"] = "null"
+                LogPrint(str("loaded translator"))
+            else:
+                LogPrint(str("non loaded translator"))
+            self._trans_obj = translator
+        return
+
+    def changelangKo(self):
+        print("lang : en : pre lang is " + self._config["local_lang"])
+        if self._config["local_lang"] != "ko_KR.qm":
+            self._app.removeTranslator(self._trans_obj)
+            translator = QtCore.QTranslator(self._app)
+            if translator.load(os.getcwd() + "\\translate\\ko_KR.qm"):
+                self._app.installTranslator(translator)
+                self._config["local_lang"] = "ko_KR.qm"
+                LogPrint(str("loaded translator"))
+            else:
+                LogPrint(str("non loaded translator"))
+            self._trans_obj = translator
+        return
+
+    def changelangZh(self):
+        print("lang : en : pre lang is " + self._config["local_lang"])
+        if self._config["local_lang"] != "zh_CN.qm":
+            self._app.removeTranslator(self._trans_obj)
+            translator = QtCore.QTranslator(self._app)
+            if translator.load(os.getcwd() + "\\translate\\zh_CN.qm"):
+                self._app.installTranslator(translator)
+                self._config["local_lang"] = "zh_CN.qm"
+                LogPrint(str("loaded translator"))
+            else:
+                LogPrint(str("non loaded translator"))
+            self._trans_obj = translator
+        return
 
     def toggleDrawingSensitive(self, drawing=True):
         """Toggle drawing sensitive.
@@ -1459,6 +1542,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def loadFile(self, filename=None):
         """Load the specified file, or the last opened file if None."""
         # changing fileListWidget loads file
+
         if filename in self.imageList and (
             self.fileListWidget.currentRow() != self.imageList.index(filename)
         ):
@@ -1499,6 +1583,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     )
                     % (e, label_file),
                 )
+                # LogPrint("e : %s" % e)
                 self.status(self.tr("Error reading %s") % label_file)
                 return False
             self.imageData = self.labelFile.imageData

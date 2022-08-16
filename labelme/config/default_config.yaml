@@ -19,6 +19,9 @@ shape_color: auto  # null, 'auto', 'manual'
 shift_auto_shape_color: 0
 label_colors: null
 
+# lang of labelme
+local_lang: null
+
 shape:
   # drawing
   line_color: [0, 255, 0, 128]
@@ -104,3 +107,4 @@ shortcuts:
   edit_label: Ctrl+E
   toggle_keep_prev_mode: Ctrl+P
   remove_selected_point: [Meta+H, Backspace]
+

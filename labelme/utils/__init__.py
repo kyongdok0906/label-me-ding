@@ -25,3 +25,7 @@ from .qt import struct
 from .qt import distance
 from .qt import distancetoline
 from .qt import fmtShortcut
+
+# add by me newly
+from .qt import newLang
+from .processini import ProcessINI
