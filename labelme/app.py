@@ -7,7 +7,8 @@ import os
 import os.path as osp
 import re
 import webbrowser
-#import ctypes
+import threading
+# import ctypes
 
 import imgviz
 import natsort
@@ -15,6 +16,8 @@ from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy import QtWidgets
+from qtpy.QtWidgets import QLabel
+from keyboard import press
 # from win32api import GetSystemMetrics
 
 from labelme import __appname__
@@ -37,6 +40,9 @@ from labelme.widgets import UniqueLabelQListWidget
 from labelme.widgets import ZoomWidget
 
 from labelme.utils.qt import LogPrint
+from labelme.utils.qt import httpReq
+from labelme.widgets import CustomTitleBar
+from labelme.widgets import CustomListWidget
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -51,6 +57,7 @@ LABEL_COLORMAP = imgviz.label_colormap()
 class MainWindow(QtWidgets.QMainWindow):
 
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = 0, 1, 2
+    selected_grade = None
 
     def __init__(
         self,
@@ -114,8 +121,7 @@ class MainWindow(QtWidgets.QMainWindow):
             flags=self._config["label_flags"],
         )
 
-        self.labelList = LabelListWidget()
-        self.lastOpenDir = None
+        # flags part
 
         self.flag_dock = self.flag_widget = None
         self.flag_dock = QtWidgets.QDockWidget(self.tr("Flags"), self)
@@ -125,6 +131,25 @@ class MainWindow(QtWidgets.QMainWindow):
             self.loadFlags({k: False for k in config["flags"]})
         self.flag_dock.setWidget(self.flag_widget)
         self.flag_widget.itemChanged.connect(self.setDirty)
+
+        # grades part ckd
+        self.grades_dock = self.grades_widget = None
+        self.grades_dock = QtWidgets.QDockWidget(self.tr("Grades"), self)
+
+        self.custom_title_bar = CustomTitleBar("gradesbar", self.grades_dock)
+        self.grades_dock.setTitleBarWidget(self.custom_title_bar)
+        self.grades_dock.setObjectName("Grades")
+
+        self.grades_widget = CustomListWidget()
+        #self.receiveGradesFromServer()
+        self.grades_dock.setWidget(self.grades_widget)
+        threading.Timer(0.1, self.receiveGradesFromServer, args=(True,)).start()
+        self.grades_dock.dockLocationChanged.connect(self.grades_dock_toggleViewAction)
+        # self.grades_dock.visibilityChanged.connect(self.setvisibilityChange)
+
+
+        self.labelList = LabelListWidget()
+        self.lastOpenDir = None
 
         self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
         self.labelList.itemDoubleClicked.connect(self.editLabel)
@@ -198,7 +223,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(scrollArea)
 
         features = QtWidgets.QDockWidget.DockWidgetFeatures()
-        for dock in ["flag_dock", "label_dock", "shape_dock", "file_dock"]:
+        for dock in ["flag_dock", "grades_dock", "label_dock", "shape_dock", "file_dock"]:
             if self._config[dock]["closable"]:
                 features = features | QtWidgets.QDockWidget.DockWidgetClosable
             if self._config[dock]["floatable"]:
@@ -210,9 +235,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 getattr(self, dock).setVisible(False)
 
         self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.grades_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.file_dock)
+
 
         # Actions
         action = functools.partial(utils.newAction, self)
@@ -730,7 +757,7 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(
             self.menus.view,
             (
-                self.flag_dock.toggleViewAction(),
+                self.grades_dock.toggleViewAction(),
                 self.label_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
@@ -895,6 +922,16 @@ class MainWindow(QtWidgets.QMainWindow):
             self.actions.editMode,
         )
         utils.addActions(self.menus.edit, actions + self.actions.editMenu)
+
+    def grades_dock_toggleViewAction(self):
+        if self.grades_dock.isFloating() is True:
+            self.custom_title_bar.minmaxbtn.setVisible(False)
+            # self.grades_dock.setStyleSheet("QWidget { border: 1px solid #000; }")
+        else:
+            self.custom_title_bar.minmaxbtn.setVisible(True)
+
+    def setvisibilityChange(self):
+        print("setvisibilityChange")
 
     def setDirty(self):
         # Even if we autosave the file, we keep the ability to undo
@@ -1309,6 +1346,15 @@ class MainWindow(QtWidgets.QMainWindow):
             s.append(shape)
         self.loadShapes(s)
 
+    def loadGrades(self, items):
+        self.grades_widget.clear()
+        for i in range(len(items)):
+            itm = items[i]
+            item = QtWidgets.QListWidgetItem(itm["grade"])
+            # item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            # item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
+            self.grades_widget.addItem(item)
+
     def loadFlags(self, flags):
         self.flag_widget.clear()
         for key, flag in flags.items():
@@ -1618,12 +1664,16 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._config["keep_prev"]:
             prev_shapes = self.canvas.shapes
         self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image))
+
         flags = {k: False for k in self._config["flags"] or []}
         if self.labelFile:
             self.loadLabels(self.labelFile.shapes)
             if self.labelFile.flags is not None:
                 flags.update(self.labelFile.flags)
         self.loadFlags(flags)
+
+        # part grades of here ckd
+
         if self._config["keep_prev"] and self.noShapes():
             self.loadShapes(prev_shapes, replace=False)
             self.setDirty()
@@ -2151,3 +2201,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     images.append(relativePath)
         images = natsort.os_sorted(images)
         return images
+
+    def receiveGradesFromServer(self, userInfo=None):
+        url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/grades'
+        headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
+        jsstr = httpReq(url, "get", headers)
+        if jsstr['message'] == 'success':
+            jsstr['items'].append({"grade": "."})
+            self.grades_widget.clearLayout(self.grades_widget.HB_layout)
+            status = self.grades_widget.addItemsToQHBox(jsstr['items'])
+            if status is True:
+                self.custom_title_bar.setKeyFocus()

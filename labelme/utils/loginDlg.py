@@ -8,6 +8,7 @@ from qtpy import QtWidgets, QtCore
 from labelme.utils.qt import LogPrint
 from labelme.app import MainWindow
 from labelme.utils.processini import *
+from labelme.utils.qt import httpReq
 
 
 class LoginDLG(QWidget):
@@ -107,8 +108,9 @@ class LoginDLG(QWidget):
         url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/login'
         headers = {'Authorization': 'Bearer AC58C3FEC1C7FF29C5EA4A881069E47867CE9368'}
         data = {'user_id': uid, 'password': pwd}
-        respone = requests.post(url, headers=headers, json=data)
-        jsstr = respone.json()
+        # respone = requests.post(url, headers=headers, json=data)
+        # jsstr = respone.json()
+        jsstr = httpReq(url, "post", headers, data)
         # print(json.dumps(jsstr))
         if jsstr['message'] != 'success':
             # LogPrint(str("for login call server error").encode('utf-8'))

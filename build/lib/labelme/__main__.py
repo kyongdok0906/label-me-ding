@@ -68,8 +68,8 @@ def main():
         default=argparse.SUPPRESS,
     )
     parser.add_argument(
-        "--flags",
-        help="comma separated list of flags OR file containing flags",
+        "--grades",
+        help="comma separated list of flags OR file containing grades",
         default=argparse.SUPPRESS,
     )
     parser.add_argument(
@@ -112,12 +112,12 @@ def main():
 
     logger.setLevel(getattr(logging, args.logger_level.upper()))
 
-    if hasattr(args, "flags"):
-        if os.path.isfile(args.flags):
-            with codecs.open(args.flags, "r", encoding="utf-8") as f:
-                args.flags = [line.strip() for line in f if line.strip()]
+    if hasattr(args, "grades"):
+        if os.path.isfile(args.grades):
+            with codecs.open(args.grades, "r", encoding="utf-8") as f:
+                args.grades = [line.strip() for line in f if line.strip()]
         else:
-            args.flags = [line for line in args.flags.split(",") if line]
+            args.grades = [line for line in args.grades.split(",") if line]
 
     if hasattr(args, "labels"):
         if os.path.isfile(args.labels):

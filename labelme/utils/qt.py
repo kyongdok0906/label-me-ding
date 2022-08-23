@@ -2,6 +2,7 @@ from math import sqrt
 import os.path as osp
 import time
 import numpy as np
+import requests, json
 
 from qtpy import QtCore
 from qtpy import QtGui
@@ -112,11 +113,27 @@ def LogPrint(error: str):
         f.close()
 
 
-def httpReq():
-    """
-        url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/login'
-        headers = {'Authorization': 'Bearer AC58C3FEC1C7FF29C5EA4A881069E47867CE9368'}
-        data = {'user_id': uname, 'password': pwd}
-        respone = requests.post(url, headers=headers, json=data)
-        jsstr = respone.json()
-    """
+def httpReq(url, method, headers=None, data=None):
+    if method == "get":
+        if headers is not None and data is None:  # 1 0
+            respone = requests.get(url, headers=headers)
+        elif headers is not None and data is not None:  # 1 1
+            respone = requests.get(url, headers=headers, json=data)
+        elif headers is None and data is not None:  # 0 1
+            respone = requests.get(url, json=data)
+        else:
+            respone = requests.get(url)  # 0 0
+    else:
+        if headers is not None and data is None:  # 1 0
+            respone = requests.post(url, headers=headers)
+        elif headers is not None and data is not None:  # 1 1
+            respone = requests.post(url, headers=headers, json=data)
+        elif headers is None and data is not None:  # 0 1
+            respone = requests.post(url, json=data)
+        else:
+            respone = requests.post(url)  # 0 0
+
+    jsstr = respone.json()
+    return jsstr
+
+
