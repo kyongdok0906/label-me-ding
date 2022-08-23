@@ -127,26 +127,42 @@ class MainWindow(QtWidgets.QMainWindow):
         self.flag_dock = QtWidgets.QDockWidget(self.tr("Flags"), self)
         self.flag_dock.setObjectName("Flags")
         self.flag_widget = QtWidgets.QListWidget()
-        if config["flags"]:
-            self.loadFlags({k: False for k in config["flags"]})
+        if self._config["flags"]:
+            self.loadFlags({k: False for k in self._config["flags"]})
         self.flag_dock.setWidget(self.flag_widget)
         self.flag_widget.itemChanged.connect(self.setDirty)
 
         # grades part ckd
+        self.selected_grade = None
         self.grades_dock = self.grades_widget = None
         self.grades_dock = QtWidgets.QDockWidget(self.tr("Grades"), self)
 
-        self.custom_title_bar = CustomTitleBar("gradesbar", self.grades_dock)
-        self.grades_dock.setTitleBarWidget(self.custom_title_bar)
+        self.grade_title_bar = CustomTitleBar("gradesbar", self.grades_dock)
+        self.grades_dock.setTitleBarWidget(self.grade_title_bar)
         self.grades_dock.setObjectName("Grades")
 
-        self.grades_widget = CustomListWidget()
+        self.grades_widget = CustomListWidget(self, "grades")
         #self.receiveGradesFromServer()
         self.grades_dock.setWidget(self.grades_widget)
+        #if self._config["grades"]:
         threading.Timer(0.1, self.receiveGradesFromServer, args=(True,)).start()
         self.grades_dock.dockLocationChanged.connect(self.grades_dock_toggleViewAction)
-        # self.grades_dock.visibilityChanged.connect(self.setvisibilityChange)
 
+        # products part ckd
+        self.selected_product = None
+        self.products_dock = self.products_widget = None
+        self.products_dock = QtWidgets.QDockWidget(self.tr("Products"), self)
+        self.products_dock.setObjectName("products")
+        self.products_dock.dockLocationChanged.connect(self.products_dock_toggleViewAction)
+        self.products_title_bar = CustomTitleBar("productbar", self.products_dock)
+        self.products_dock.setTitleBarWidget(self.products_title_bar)
+        self.products_widget = QtWidgets.QListWidget()
+
+        self.products_dock.setWidget(self.products_widget)
+        self.products_widget.itemChanged.connect(self.setDirty)
+
+        #if self._config["products"]:
+        threading.Timer(0.3, self.receiveProductsFromServer, args=(True,)).start()
 
         self.labelList = LabelListWidget()
         self.lastOpenDir = None
@@ -223,19 +239,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(scrollArea)
 
         features = QtWidgets.QDockWidget.DockWidgetFeatures()
-        for dock in ["flag_dock", "grades_dock", "label_dock", "shape_dock", "file_dock"]:
+        for dock in ["flag_dock", "grades_dock", "products_dock", "label_dock", "shape_dock", "file_dock"]:
             if self._config[dock]["closable"]:
                 features = features | QtWidgets.QDockWidget.DockWidgetClosable
             if self._config[dock]["floatable"]:
                 features = features | QtWidgets.QDockWidget.DockWidgetFloatable
             if self._config[dock]["movable"]:
                 features = features | QtWidgets.QDockWidget.DockWidgetMovable
+
             getattr(self, dock).setFeatures(features)
+
             if self._config[dock]["show"] is False:
                 getattr(self, dock).setVisible(False)
 
         self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.grades_dock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.products_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.file_dock)
@@ -620,7 +639,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         fill_drawing.trigger()
 
-        # Lavel list context menu.
+        # Label list context menu.
         labelMenu = QtWidgets.QMenu()
         utils.addActions(labelMenu, (edit, delete))
         self.labelList.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -757,8 +776,10 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(
             self.menus.view,
             (
+                self.flag_dock.toggleViewAction(),
                 self.grades_dock.toggleViewAction(),
-                self.label_dock.toggleViewAction(),
+                self.products_dock.toggleViewAction(),
+                #self.label_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
                 None,
@@ -925,10 +946,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def grades_dock_toggleViewAction(self):
         if self.grades_dock.isFloating() is True:
-            self.custom_title_bar.minmaxbtn.setVisible(False)
+            self.grade_title_bar.minmaxbtn.setVisible(False)
             # self.grades_dock.setStyleSheet("QWidget { border: 1px solid #000; }")
         else:
-            self.custom_title_bar.minmaxbtn.setVisible(True)
+            self.grade_title_bar.minmaxbtn.setVisible(True)
+
+    def products_dock_toggleViewAction(self):
+        if self.products_dock.isFloating() is True:
+            self.products_title_bar.minmaxbtn.setVisible(False)
+            # self.grades_dock.setStyleSheet("QWidget { border: 1px solid #000; }")
+        else:
+            self.products_title_bar.minmaxbtn.setVisible(True)
 
     def setvisibilityChange(self):
         print("setvisibilityChange")
@@ -1016,7 +1044,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def tutorial(self):
         url = "https://github.com/wkentaro/labelme/tree/main/examples/tutorial"  # NOQA
         webbrowser.open(url)
-
+    """
     def changelangEn(self):
         print("lang : en : pre lang is " + self._config["local_lang"])
         if self._config["local_lang"] != "en_US.qm" or self._config["local_lang"] != "null":
@@ -1058,7 +1086,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 LogPrint(str("non loaded translator"))
             self._trans_obj = translator
         return
-
+    """
     def toggleDrawingSensitive(self, drawing=True):
         """Toggle drawing sensitive.
 
@@ -1354,6 +1382,15 @@ class MainWindow(QtWidgets.QMainWindow):
             # item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             # item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
             self.grades_widget.addItem(item)
+
+    def loadProducts(self, items):
+        self.products_widget.clear()
+        for i in range(len(items)):
+            itm = items[i]
+            item = QtWidgets.QListWidgetItem(itm["product"])
+            # item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            # item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
+            self.products_widget.addItem(item)
 
     def loadFlags(self, flags):
         self.flag_widget.clear()
@@ -2207,8 +2244,41 @@ class MainWindow(QtWidgets.QMainWindow):
         headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
         jsstr = httpReq(url, "get", headers)
         if jsstr['message'] == 'success':
-            jsstr['items'].append({"grade": "."})
-            self.grades_widget.clearLayout(self.grades_widget.HB_layout)
-            status = self.grades_widget.addItemsToQHBox(jsstr['items'])
-            if status is True:
-                self.custom_title_bar.setKeyFocus()
+            self.grades_widget.set(jsstr['items'])
+            if self.grades_widget._status is True:
+                self.grade_title_bar.pressEnterKeyForce()
+
+    def receiveProductsFromServer(self, userInfo=None):
+        url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/products'
+        headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
+        jsstr = httpReq(url, "get", headers)
+        if jsstr['message'] == 'success':
+            items = jsstr['items']
+            items = [
+                {
+                    "product": "사용전 철근(가공,직선)"
+                },
+                {
+                    "product": "단조스크랩"
+                },
+                {
+                    "product": "금형주"
+                },
+                {
+                    "product": "대표품목 경량AL"
+                },
+                {
+                    "product": "대표품목 선반C"
+                },
+                {
+                    "product": "대표품목 선반B"
+                },
+                {
+                    "product": "대표품목 슈레디드A"
+                },
+                {
+                    "product": "대표품목 슈레디드B"
+                }
+            ]
+            if len(items):
+                self.loadProducts(items)

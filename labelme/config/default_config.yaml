@@ -8,6 +8,7 @@ keep_prev_contrast: false
 logger_level: info
 
 grades: null
+products: null
 flags: null
 label_flags: null
 labels: null
@@ -36,6 +37,11 @@ shape:
 
 # main
 grades_dock:
+  show: true
+  closable: true
+  movable: true
+  floatable: true
+products_dock:
   show: true
   closable: true
   movable: true

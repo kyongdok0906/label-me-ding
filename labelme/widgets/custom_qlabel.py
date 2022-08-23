@@ -14,5 +14,5 @@ class CQLabel(QLabel):
     def mouseReleaseEvent(self, ev: QtGui.QMouseEvent):
         # print("click " + self.text())
         self.setStyleSheet("QWidget { background-color: rgba(10, 170, 255, 80); border: 0; font-size: 12px}")
-        self._parent.selected_grade = self.text()
+        self._parent._selected_item = self.text()
         self._parent.event_mouse_click()
