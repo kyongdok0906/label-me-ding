@@ -31,3 +31,5 @@ from .custom_qlabel import CQLabel
 from .custom_list_widget import CustomLabelListWidget
 
 from .signal import Signal
+
+from .custom_list_widget import topToolWidget

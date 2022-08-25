@@ -45,6 +45,7 @@ from labelme.widgets import DockInPutTitleBar
 from labelme.widgets import DockCheckBoxTitleBar
 from labelme.widgets import CustomListWidget
 from labelme.widgets import CustomLabelListWidget
+from labelme.widgets import topToolWidget
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -184,6 +185,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.shape_dock.setTitleBarWidget(self.customLabelTitleBar)
         self.shape_dock.setWidget(self.labelList)
 
+        self.topToolWidget = topToolWidget("toptool", self)
+        self.topToolbar_dock = QtWidgets.QDockWidget(self.tr("Top bar"), self)
+        self.topToolbar_dock.setWidget(self.topToolWidget)
+        self.topToolbar_dock.setTitleBarWidget(QtWidgets.QWidget())
         """ old code
         self.labelList = LabelListWidget()
         self.lastOpenDir = None
@@ -277,14 +282,16 @@ class MainWindow(QtWidgets.QMainWindow):
             if self._config[dock]["show"] is False:
                 getattr(self, dock).setVisible(False)
 
-        #
-
-        #self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
+        # self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.grades_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.products_dock)
-        #self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
+        # self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.file_dock)
+
+        self.addDockWidget(Qt.TopDockWidgetArea, self.topToolbar_dock)
+
+
 
 
         # Actions
@@ -665,6 +672,58 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=True,
         )
         fill_drawing.trigger()
+        
+        # add ckd //
+        createModeTop = action(
+            self.tr("Create Polygons"),
+            lambda: self.toggleDrawMode(False, createMode="polygon"),
+            shortcuts["create_polygon"],
+            "objects",
+            self.tr("Start drawing polygons"),
+            enabled=False,
+        )
+        createRectangleModeTop = action(
+            self.tr("Create Rectangle"),
+            lambda: self.toggleDrawMode(False, createMode="rectangle"),
+            shortcuts["create_rectangle"],
+            "objects",
+            self.tr("Start drawing rectangles"),
+            enabled=False,
+        )
+        createCircleModeTop = action(
+            self.tr("Create Circle"),
+            lambda: self.toggleDrawMode(False, createMode="circle"),
+            shortcuts["create_circle"],
+            "objects",
+            self.tr("Start drawing circles"),
+            enabled=False,
+        )
+        createLineModeTop = action(
+            self.tr("Create Line"),
+            lambda: self.toggleDrawMode(False, createMode="line"),
+            shortcuts["create_line"],
+            "objects",
+            self.tr("Start drawing lines"),
+            enabled=False,
+        )
+        createPointModeTop = action(
+            self.tr("Create Point"),
+            lambda: self.toggleDrawMode(False, createMode="point"),
+            shortcuts["create_point"],
+            "objects",
+            self.tr("Start drawing points"),
+            enabled=False,
+        )
+        createLineStripModeTop = action(
+            self.tr("Create LineStrip"),
+            lambda: self.toggleDrawMode(False, createMode="linestrip"),
+            shortcuts["create_linestrip"],
+            "objects",
+            self.tr("Start drawing linestrip. Ctrl+LeftClick ends creation."),
+            enabled=False,
+        )
+
+        # //add ckd
 
         # Label list context menu.
         labelMenu = QtWidgets.QMenu()
@@ -700,6 +759,14 @@ class MainWindow(QtWidgets.QMainWindow):
             createLineMode=createLineMode,
             createPointMode=createPointMode,
             createLineStripMode=createLineStripMode,
+
+            createModeTop=createModeTop,
+            createRectangleModeTop=createRectangleModeTop,
+            createCircleModeTop=createCircleModeTop,
+            createLineModeTop=createLineModeTop,
+            createPointModeTop=createPointModeTop,
+            createLineStripModeTop=createLineStripModeTop,
+
             zoom=zoom,
             zoomIn=zoomIn,
             zoomOut=zoomOut,
@@ -809,6 +876,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 #self.label_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
+                self.topToolbar_dock.toggleViewAction(),
+
                 None,
                 fill_drawing,
                 None,
@@ -860,6 +929,18 @@ class MainWindow(QtWidgets.QMainWindow):
             None,
             zoom,
             fitWidth,
+        )
+
+        # add ckd
+        self.toptools = self.toptoolbar("Top")
+        # Menu buttons on Left
+        self.actions.toptool = (
+            createModeTop,
+            createRectangleModeTop,
+            createCircleModeTop,
+            createLineModeTop,
+            createPointModeTop,
+            createLineStripModeTop
         )
 
         self.statusBar().showMessage(str(self.tr("%s started.")) % __appname__)
@@ -946,6 +1027,17 @@ class MainWindow(QtWidgets.QMainWindow):
         if actions:
             utils.addActions(toolbar, actions)
         self.addToolBar(Qt.LeftToolBarArea, toolbar)
+        return toolbar
+
+    # add ckd
+    def toptoolbar(self, title, actions=None):
+        toolbar = ToolBar(title)
+        toolbar.setObjectName("%sToolBar" % title)
+        # toolbar.setOrientation(Qt.Vertical)
+        toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        if actions:
+            utils.addActions(toolbar, actions)
+        self.addToolBar(Qt.TopToolBarArea, toolbar)
         return toolbar
 
     # Support Functions

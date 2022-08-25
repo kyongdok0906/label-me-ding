@@ -58,7 +58,8 @@ class CustomListWidget(QtWidgets.QWidget):
             self._app.selected_grade = self._selected_item
             threading.Timer(0.1, self._app.receiveProductsFromServerByGrade).start()
             threading.Timer(0.1, self._app.customLabelTitleBar.hidnBtn.clicked.emit).start()
-            # self._app.customLabelTitleBar.hidnBtn.clicked.emit()
+            # self._app.queueEvent(self._app.receiveProductsFromServerByGrade)
+            # self._app.queueEvent(self._app.customLabelTitleBar.hidnBtn.clicked.emit)
 
         elif self._selected_item is not None and self._objtag == "products":
             pass  # process ploygon with one selected product
@@ -237,6 +238,7 @@ class CustomLabelListWidget(QtWidgets.QWidget):
     def initUI(self):
         self.vContent_layout = QtWidgets.QVBoxLayout(self)
         self.vContent_layout.setContentsMargins(0, 5, 0, 5)
+        self.vContent_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.twidget = QtWidgets.QWidget(self)
         self.twidget.setLayout(self.vContent_layout)
@@ -324,3 +326,49 @@ class CustomLabelListWidget(QtWidgets.QWidget):
     @pyqtSlot(int)
     def polygon_label_status(self, arg):
         print(arg)
+
+
+class topToolWidget(QtWidgets.QWidget):
+    def __init__(self, objname, app=None):
+        super(topToolWidget, self).__init__()
+        self.setObjectName(objname)
+        self.setMaximumHeight(50)
+        self.setContentsMargins(0, 0, 0, 0)
+        # self.setFixedWidth(500)
+        self._app = app
+        # setting UI
+
+        self.initUI()
+
+    def initUI(self):
+        hbox_layout = QHBoxLayout()
+        hbox_layout.setSpacing(0)
+        hbox_layout.setContentsMargins(0, 0, 0, 0)
+
+        #self.polygon = Qlabel(self.tr("polygon"))
+        #hbox_layout.addWidget(self.polygon, 0, QtCore.Qt.AlignLeft)
+
+        self.polygon = QToolButton()
+        self.polygon.setIcon(utils.newIcon("poly"))
+        #self.polygon.setFixedSize(50, 50)
+
+        self.rect = QToolButton()
+        self.rect.setIcon(utils.newIcon("rect"))
+
+        self.circle = QToolButton()
+        self.circle.setIcon(utils.newIcon("circle"))
+
+        self.line = QToolButton()
+        self.line.setIcon(utils.newIcon("line"))
+
+        hbox_layout.addSpacing(20)
+        hbox_layout.addWidget(self.polygon, 0, QtCore.Qt.AlignLeft)
+        hbox_layout.addSpacing(20)
+        hbox_layout.addWidget(self.rect, 0, QtCore.Qt.AlignLeft)
+        hbox_layout.addSpacing(20)
+        hbox_layout.addWidget(self.circle, 0, QtCore.Qt.AlignLeft)
+        hbox_layout.addSpacing(20)
+        hbox_layout.addWidget(self.line, 0, QtCore.Qt.AlignLeft)
+        hbox_layout.addStretch(1)
+
+        self.setLayout(hbox_layout)
