@@ -41,8 +41,10 @@ from labelme.widgets import ZoomWidget
 
 from labelme.utils.qt import LogPrint
 from labelme.utils.qt import httpReq
-from labelme.widgets import CustomTitleBar
+from labelme.widgets import DockInPutTitleBar
+from labelme.widgets import DockCheckBoxTitleBar
 from labelme.widgets import CustomListWidget
+from labelme.widgets import CustomLabelListWidget
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -58,6 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = 0, 1, 2
     selected_grade = None
+    userInfo = {}
 
     def __init__(
         self,
@@ -121,8 +124,7 @@ class MainWindow(QtWidgets.QMainWindow):
             flags=self._config["label_flags"],
         )
 
-        # flags part
-
+        # flags part after delete
         self.flag_dock = self.flag_widget = None
         self.flag_dock = QtWidgets.QDockWidget(self.tr("Flags"), self)
         self.flag_dock.setObjectName("Flags")
@@ -135,35 +137,54 @@ class MainWindow(QtWidgets.QMainWindow):
         # grades part ckd
         self.selected_grade = None
         self.grades_dock = self.grades_widget = None
-        self.grades_dock = QtWidgets.QDockWidget(self.tr("Grades"), self)
-
-        self.grade_title_bar = CustomTitleBar("gradesbar", self.grades_dock)
+        self.grades_dock = QtWidgets.QDockWidget(self.tr("Grades (Total %s)" % 0), self)
+        self.grades_dock.setObjectName("grades")
+        self.grade_title_bar = DockInPutTitleBar(self.grades_dock, "gradesbar", self)
         self.grades_dock.setTitleBarWidget(self.grade_title_bar)
-        self.grades_dock.setObjectName("Grades")
 
         self.grades_widget = CustomListWidget(self, "grades")
         #self.receiveGradesFromServer()
         self.grades_dock.setWidget(self.grades_widget)
         #if self._config["grades"]:
-        threading.Timer(0.1, self.receiveGradesFromServer, args=(True,)).start()
-        self.grades_dock.dockLocationChanged.connect(self.grades_dock_toggleViewAction)
+        threading.Timer(0.1, self.gradeButtonEvent, args=(True,)).start()
+        #self.grades_dock.dockLocationChanged.connect(self.grades_dock_toggleViewAction)
 
         # products part ckd
         self.selected_product = None
         self.products_dock = self.products_widget = None
-        self.products_dock = QtWidgets.QDockWidget(self.tr("Products"), self)
+        self.products_dock = QtWidgets.QDockWidget(self.tr("Products (Total %s)" % 0), self)
         self.products_dock.setObjectName("products")
-        self.products_dock.dockLocationChanged.connect(self.products_dock_toggleViewAction)
-        self.products_title_bar = CustomTitleBar("productbar", self.products_dock)
+        #self.products_dock.dockLocationChanged.connect(self.products_dock_toggleViewAction)
+        self.products_title_bar = DockInPutTitleBar(self.products_dock, "productsbar", self)
         self.products_dock.setTitleBarWidget(self.products_title_bar)
-        self.products_widget = QtWidgets.QListWidget()
 
+        self.products_widget = QtWidgets.QListWidget()
+        self.products_widget.setSpacing(3)
+        self.products_widget.setContentsMargins(3, 6, 3, 3)
         self.products_dock.setWidget(self.products_widget)
         self.products_widget.itemChanged.connect(self.setDirty)
-
         #if self._config["products"]:
-        threading.Timer(0.3, self.receiveProductsFromServer, args=(True,)).start()
+        #threading.Timer(0.3, self.receiveProductsFromServer, args=(True,)).start()
 
+
+
+        self.labelList = CustomLabelListWidget(self)
+        self.lastOpenDir = None
+
+        #self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
+        #self.labelList.itemDoubleClicked.connect(self.editLabel)
+        #self.labelList.itemChanged.connect(self.labelItemChanged)
+        #self.labelList.itemDropped.connect(self.labelOrderChanged)
+        self.shape_dock = QtWidgets.QDockWidget(
+            self.tr("Polygon Labels (Total %s)" % 0), self
+
+        )
+        self.shape_dock.setObjectName("Labels")
+        self.customLabelTitleBar = DockCheckBoxTitleBar(self, self.shape_dock)
+        self.shape_dock.setTitleBarWidget(self.customLabelTitleBar)
+        self.shape_dock.setWidget(self.labelList)
+
+        """ old code
         self.labelList = LabelListWidget()
         self.lastOpenDir = None
 
@@ -176,7 +197,9 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.shape_dock.setObjectName("Labels")
         self.shape_dock.setWidget(self.labelList)
+        """
 
+        # after delete
         self.uniqLabelList = UniqueLabelQListWidget()
         self.uniqLabelList.setToolTip(
             self.tr(
@@ -184,6 +207,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Press 'Esc' to deselect."
             )
         )
+
         if self._config["labels"]:
             for label in self._config["labels"]:
                 item = self.uniqLabelList.createItemFromLabel(label)
@@ -193,6 +217,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label_dock = QtWidgets.QDockWidget(self.tr("Label List"), self)
         self.label_dock.setObjectName("Label List")
         self.label_dock.setWidget(self.uniqLabelList)
+        # after delete
 
         self.fileSearch = QtWidgets.QLineEdit()
         self.fileSearch.setPlaceholderText(self.tr("Search Filename"))
@@ -252,10 +277,12 @@ class MainWindow(QtWidgets.QMainWindow):
             if self._config[dock]["show"] is False:
                 getattr(self, dock).setVisible(False)
 
-        self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
+        #
+
+        #self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.grades_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.products_dock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
+        #self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.file_dock)
 
@@ -776,7 +803,7 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(
             self.menus.view,
             (
-                self.flag_dock.toggleViewAction(),
+                #self.flag_dock.toggleViewAction(),
                 self.grades_dock.toggleViewAction(),
                 self.products_dock.toggleViewAction(),
                 #self.label_dock.toggleViewAction(),
@@ -944,19 +971,21 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         utils.addActions(self.menus.edit, actions + self.actions.editMenu)
 
+    """
     def grades_dock_toggleViewAction(self):
         if self.grades_dock.isFloating() is True:
             self.grade_title_bar.minmaxbtn.setVisible(False)
             # self.grades_dock.setStyleSheet("QWidget { border: 1px solid #000; }")
         else:
             self.grade_title_bar.minmaxbtn.setVisible(True)
-
+    
     def products_dock_toggleViewAction(self):
-        if self.products_dock.isFloating() is True:
-            self.products_title_bar.minmaxbtn.setVisible(False)
-            # self.grades_dock.setStyleSheet("QWidget { border: 1px solid #000; }")
-        else:
-            self.products_title_bar.minmaxbtn.setVisible(True)
+    if self.products_dock.isFloating() is True:
+        self.products_title_bar.minmaxbtn.setVisible(False)
+        # self.grades_dock.setStyleSheet("QWidget { border: 1px solid #000; }")
+    else:
+        self.products_title_bar.minmaxbtn.setVisible(True)
+    """
 
     def setvisibilityChange(self):
         print("setvisibilityChange")
@@ -1391,6 +1420,35 @@ class MainWindow(QtWidgets.QMainWindow):
             # item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             # item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
             self.products_widget.addItem(item)
+        self.products_title_bar.titleLabel.setText(self.tr("Products (Total %s)" % self.products_widget.__len__()))
+
+    def LoadLabelByGrade(self, shape):
+        if shape.group_id is None:
+            text = shape.label
+        else:
+            text = "{} ({})".format(shape.label, shape.group_id)
+        label_list_item = LabelListWidgetItem(text, shape)
+        self.labelList.addItem(label_list_item)
+        if not self.uniqLabelList.findItemsByLabel(shape.label):
+            item = self.uniqLabelList.createItemFromLabel(shape.label)
+            self.uniqLabelList.addItem(item)
+            rgb = self._get_rgb_by_label(shape.label)
+            self.uniqLabelList.setItemLabel(item, shape.label, rgb)
+        self.labelDialog.addLabelHistory(shape.label)
+        for action in self.actions.onShapesPresent:
+            action.setEnabled(True)
+
+        self._update_shape_color(shape)
+        label_list_item.setText(
+            '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
+                html.escape(text), *shape.fill_color.getRgb()[:3]
+            )
+        )
+
+    def addProduct(self, new_str):
+        item = QtWidgets.QListWidgetItem(new_str)
+        self.products_widget.insertItem(0, item)
+        self.products_title_bar.titleLabel.setText(self.tr("Products (Total %s)" % self.products_widget.__len__()))
 
     def loadFlags(self, flags):
         self.flag_widget.clear()
@@ -2239,21 +2297,32 @@ class MainWindow(QtWidgets.QMainWindow):
         images = natsort.os_sorted(images)
         return images
 
+    def gradeButtonEvent(self, arg):
+        self.grade_title_bar.hidnBtn.clicked.emit()
+
     def receiveGradesFromServer(self, userInfo=None):
         url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/grades'
         headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
         jsstr = httpReq(url, "get", headers)
         if jsstr['message'] == 'success':
             self.grades_widget.set(jsstr['items'])
-            if self.grades_widget._status is True:
-                self.grade_title_bar.pressEnterKeyForce()
 
+    # send new grade
+    def sendGradeToServer(self, item, callback):
+        #url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/grades'
+        #headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
+        #jsstr = httpReq(url, "post", headers)
+        #if jsstr['message'] == 'success':
+        callback(item)
+
+    # This function be not used now
     def receiveProductsFromServer(self, userInfo=None):
         url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/products'
         headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
         jsstr = httpReq(url, "get", headers)
         if jsstr['message'] == 'success':
             items = jsstr['items']
+            print("All products is ", items)
             items = [
                 {
                     "product": "사용전 철근(가공,직선)"
@@ -2263,22 +2332,41 @@ class MainWindow(QtWidgets.QMainWindow):
                 },
                 {
                     "product": "금형주"
-                },
-                {
-                    "product": "대표품목 경량AL"
-                },
-                {
-                    "product": "대표품목 선반C"
-                },
-                {
-                    "product": "대표품목 선반B"
-                },
-                {
-                    "product": "대표품목 슈레디드A"
-                },
-                {
-                    "product": "대표품목 슈레디드B"
                 }
             ]
             if len(items):
                 self.loadProducts(items)
+
+    def receiveProductsFromServerByGrade(self):
+        if self.selected_grade:
+            #print(self.selected_grade)
+            url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/products?grade=' + self.selected_grade
+            headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
+            jsstr = httpReq(url, "get", headers)
+            if jsstr['message'] == 'success':
+                items = jsstr['items']
+                print("products is ", items[0])
+                if len(items):
+                    self.loadProducts(items)
+
+    # send new product
+    def sendProductToServer(self, pstr, callback):
+        item = {"product": pstr}
+        # url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/grades'
+        # headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
+        # jsstr = httpReq(url, "post", headers)
+        # if jsstr['message'] == 'success':
+        callback(pstr)
+
+    def receiveLabelsFromServerByGrade(self):
+        if self.selected_grade:
+            #print(self.selected_grade)
+            url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/codes/labels?grade=' + self.selected_grade
+            headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
+            jsstr = httpReq(url, "get", headers)
+            if jsstr['message'] == 'success':
+                items = jsstr['items']
+                print("labels is ", items[0])
+                if len(items):
+                    self.labelList.addRows(items)
+

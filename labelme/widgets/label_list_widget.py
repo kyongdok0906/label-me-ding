@@ -72,7 +72,6 @@ class LabelListWidgetItem(QtGui.QStandardItem):
         super(LabelListWidgetItem, self).__init__()
         self.setText(text or "")
         self.setShape(shape)
-
         self.setCheckable(True)
         self.setCheckState(Qt.Checked)
         self.setEditable(False)
@@ -183,3 +182,4 @@ class LabelListWidget(QtWidgets.QListView):
 
     def clear(self):
         self.model().clear()
+
