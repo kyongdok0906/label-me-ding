@@ -169,3 +169,35 @@ class ProcessINI(object):
                     print("%s = False[bool]" % key)
             elif type(self.configDef[key]) == str:
                 print("%s = %s[str]" % (key, self.configDef[key]))
+
+
+class AppInfoFile(object):
+    def __init__(self, pFileName=None, pKey=None, pVal=None):
+        # Load setting in the main thread
+        self._file = pFileName
+        self._key = pKey
+        self._val = pVal
+
+    def saveValue(self):
+        if not self._file:
+            return
+        if os.path.exists(self._file) is not True:
+            return
+        # default_config_file = os.path.join(os.path.expanduser("~"), ".labelmerc")
+        # local_lang: null
+        #fp.write("{}: {}\n".format(self._key, self._val))
+        line_content = ""
+        with open(self._file, "r", encoding="utf-8") as fp:
+            lines = fp.readlines()
+            for i, le in enumerate(lines):
+                line = le.rstrip()
+                if line:
+                    if line.find(self._key) == 0:
+                        line_content += "{}: {}\n".format(self._key, self._val)
+                    else:
+                        line_content += line + "\n"
+                else:
+                    line_content += "\n"
+
+        with open(self._file, "w", encoding="utf-8") as fp:
+            fp.write(line_content)

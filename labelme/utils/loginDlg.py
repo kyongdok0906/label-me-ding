@@ -55,7 +55,8 @@ class LoginDLG(QWidget):
         cbidx = 0
         for i in range(0, self._cb.count()):
             itxt = self._cb.itemData(i)
-            if itxt == self._config["local_lang"]:
+            ml = self._config["local_lang"]
+            if itxt == ml:
                 cbidx = i
                 break
 
@@ -106,7 +107,7 @@ class LoginDLG(QWidget):
             return
 
         url = 'https://gb9fb258fe17506-apexdb.adb.ap-seoul-1.oraclecloudapps.com/ords/lm/v1/labelme/login'
-        headers = {'Authorization': 'Bearer AC58C3FEC1C7FF29C5EA4A881069E47867CE9368'}
+        headers = {'Authorization': 'Bearer 98EDFBC2D4A74E9AB806D4718EC503EE6DEDAAAD'}
         data = {'user_id': uid, 'password': pwd}
         # respone = requests.post(url, headers=headers, json=data)
         # jsstr = respone.json()
@@ -116,15 +117,13 @@ class LoginDLG(QWidget):
             # LogPrint(str("for login call server error").encode('utf-8'))
             self._lb_alram.setText("Invalid ID or PWD")
             threading.Timer(2, self.showErrorText).start()
-        else:
-            # print(self._config["local_lang"])
+        else:   # success
             if self._config is not None:
-                self._config["role_id"] = jsstr['role_id']
+                self._config["grade_yn"] = "Y" if jsstr['grade_yn'].upper() == "Y" else "N"
+                self._config["product_yn"] = "Y" if jsstr['product_yn'].upper() == "Y" else "N"
+                self._config["label_yn"] = "Y" if jsstr['label_yn'].upper() == "Y" else "N"
+                self._config["user_id"] = uid
             self._lb_alram.setText("Sucess Log in")
-
-            labele_ini = os.getcwd() + '/labelme.ini'
-            iniCls = ProcessINI(labele_ini, "sec_lang", "local_lang")
-            iniCls.setValue(self._config["local_lang"])
             self._config["login_state"] = True
             self.close()
 

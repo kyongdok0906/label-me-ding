@@ -438,14 +438,16 @@ class Canvas(QtWidgets.QWidget):
 
             self.movingShape = False
 
-    def endMove(self, copy):
+    def endMove(self, copy, idx):
         assert self.selectedShapes and self.selectedShapesCopy
         assert len(self.selectedShapesCopy) == len(self.selectedShapes)
         if copy:
             for i, shape in enumerate(self.selectedShapesCopy):
+                shape.id = "%04d" % idx
                 self.shapes.append(shape)
                 self.selectedShapes[i].selected = False
                 self.selectedShapes[i] = shape
+                idx = idx + 1
         else:
             for i, shape in enumerate(self.selectedShapesCopy):
                 self.selectedShapes[i].points = shape.points
@@ -587,11 +589,11 @@ class Canvas(QtWidgets.QWidget):
         self.storeShapes()
         self.update()
 
-    def duplicateSelectedShapes(self):
+    def duplicateSelectedShapes(self, idx):
         if self.selectedShapes:
             self.selectedShapesCopy = [s.copy() for s in self.selectedShapes]
             self.boundedShiftShapes(self.selectedShapesCopy)
-            self.endMove(copy=True)
+            self.endMove(copy=True, idx=idx)
         return self.selectedShapes
 
     def boundedShiftShapes(self, shapes):
@@ -820,10 +822,15 @@ class Canvas(QtWidgets.QWidget):
 
                 self.movingShape = False
 
-    def setLastLabel(self, text, flags):
-        assert text
-        self.shapes[-1].label = text
+    def setLastLabel(self, item, flags):
+        assert item
+        self.shapes[-1].label = item["label"]
         self.shapes[-1].flags = flags
+        #self.shapes[-1].line_color = QtGui.QColor(item["color"])
+        #self.shapes[-1].fill_color = QtGui.QColor(item["color"])
+        self.shapes[-1].color = item["color"]
+        self.shapes[-1].id = item["id"]
+
         self.shapesBackups.pop()
         self.storeShapes()
         return self.shapes[-1]

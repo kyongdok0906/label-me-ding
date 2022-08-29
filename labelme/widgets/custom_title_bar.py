@@ -19,6 +19,10 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         boxLayout.setContentsMargins(1, 1, 1, 1)
 
         self.titleLabel = QLabel(self)
+        if self._bartype == "gradesbar":
+            self.titleLabel.setText(self.tr("Grades (Total %s)" % 0))
+        if self._bartype == "productsbar":
+            self.titleLabel.setText(self.tr("Products (Total %s)" % 0))
 
         self.hidnBtn = QtWidgets.QPushButton(self)
         self.hidnBtn.setText('.')
@@ -26,11 +30,19 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         self.hidnBtn.clicked.connect(self.clickProgramicallyBtn)  # must click this button Programically
         self.hidnBtn.hide()
 
-        self.newLabel = QLabel(str("New Input"))
-        self.titleEdit = QLineEdit(self)
-        # self.titleEdit.hide()
-        #self.titleEdit.editingFinished.connect(self.finishEdit)
-        self.titleEdit.returnPressed.connect(self.returnPresshandle)
+        if self._bartype == "gradesbar" and self._app._config["grade_yn"] == "Y":
+            self.newLabel = QLabel(str("New Input"))
+            self.titleEdit = QLineEdit(self)
+            # self.titleEdit.hide()
+            #self.titleEdit.editingFinished.connect(self.finishEdit)
+            self.titleEdit.returnPressed.connect(self.returnPresshandle)
+
+        elif self._bartype == "productsbar" and self._app._config["product_yn"] == "Y":
+            self.newLabel = QLabel(str("New Input"))
+            self.titleEdit = QLineEdit(self)
+            # self.titleEdit.hide()
+            #self.titleEdit.editingFinished.connect(self.finishEdit)
+            self.titleEdit.returnPressed.connect(self.returnPresshandle)
 
         """
          iconSize = QApplication.style().standardIcon(
@@ -60,10 +72,19 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         boxLayout.addWidget(self.hidnBtn, 0, QtCore.Qt.AlignLeft)
         boxLayout.addStretch()
         boxLayout.addSpacing(20)
-        boxLayout.addWidget(self.newLabel, 0, QtCore.Qt.AlignRight)
-        boxLayout.addSpacing(6)
-        boxLayout.addWidget(self.titleEdit, 0, QtCore.Qt.AlignRight)
-        boxLayout.addSpacing(5)
+
+        if self._bartype == "gradesbar" and self._app._config["grade_yn"] == "Y":
+            boxLayout.addWidget(self.newLabel, 0, QtCore.Qt.AlignRight)
+            boxLayout.addSpacing(6)
+            boxLayout.addWidget(self.titleEdit, 0, QtCore.Qt.AlignRight)
+            boxLayout.addSpacing(5)
+
+        elif self._bartype == "productsbar" and self._app._config["product_yn"] == "Y":
+            boxLayout.addWidget(self.newLabel, 0, QtCore.Qt.AlignRight)
+            boxLayout.addSpacing(6)
+            boxLayout.addWidget(self.titleEdit, 0, QtCore.Qt.AlignRight)
+            boxLayout.addSpacing(5)
+
         boxLayout.addWidget(self.dockButton, 0, QtCore.Qt.AlignRight)
         boxLayout.addSpacing(5)
         boxLayout.addWidget(self.closeButton, 0, QtCore.Qt.AlignRight)
@@ -71,7 +92,7 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         dockWidget.featuresChanged.connect(self.onFeaturesChanged)
 
         self.onFeaturesChanged(dockWidget.features())
-        self.setTitle(dockWidget.windowTitle())
+        # self.setTitle(dockWidget.windowTitle())
 
         dockWidget.installEventFilter(self)
 
@@ -98,6 +119,9 @@ class DockInPutTitleBar(QtWidgets.QWidget):
     def returnPresshandle(self):  # called when it press enter key
         input_str = self.titleEdit.text()
         re_str = input_str.strip()
+        if len(re_str) < 1:
+            return
+
         if self._bartype == "gradesbar":
             _customlistwidget = self._dockWidget.widget()
             if _customlistwidget and len(_customlistwidget.items_list) > 0:
@@ -105,8 +129,6 @@ class DockInPutTitleBar(QtWidgets.QWidget):
                 self.titleEdit.setText("")
 
         if self._bartype == "productsbar":
-            if len(re_str) < 1:
-                return
             # print(self.objectName() + re_str)
             _customlistwidget = self._dockWidget.widget()
             if _customlistwidget and self._app:
@@ -154,8 +176,8 @@ class DockInPutTitleBar(QtWidgets.QWidget):
     def clickProgramicallyBtn(self):
         self._app.receiveGradesFromServer()
 
+    # non using
     def pressEnterKeyForce(self):
-
         self.titleEdit.setFocus()
         self.titleEdit.setText("")
         press('enter')
@@ -167,12 +189,12 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
         self._app = app
         #self.signal = Signal()
         #self.signal.polygon_check_signal.connect(self.polygon_label_status)
-
         boxLayout = QHBoxLayout(self)
         boxLayout.setSpacing(1)
         boxLayout.setContentsMargins(1, 1, 1, 1)
 
         self.titleLabel = QLabel(self)
+        self.titleLabel.setText(self.tr("Polygon Labels (Total %s)" % 0))
 
         self.hidnBtn = QtWidgets.QPushButton(self)
         self.hidnBtn.setText('')
@@ -182,6 +204,7 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
 
         self.checkbox = QCheckBox(self)
         self.checkbox.stateChanged.connect(self.stateChangeHandle)
+        self.checkbox.setCheckState(Qt.Checked)
 
         self.dockButton = QToolButton(self)
         #self.dockButton.setIcon(QApplication.style().standardIcon(QStyle.SP_TitleBarNormalButton))
@@ -212,10 +235,11 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
         dockWidget.featuresChanged.connect(self.onFeaturesChanged)
 
         self.onFeaturesChanged(dockWidget.features())
-        self.setTitle(dockWidget.windowTitle())
+        #self.setTitle(dockWidget.windowTitle())
 
         dockWidget.installEventFilter(self)
         self.setContentsMargins(0, 3, 0, 5)
+        # self.setStyleSheet("QWidget { background: rgb(222, 222, 222); }")
 
     def eventFilter(self, source, event):
         #if event.type() == QEvent.WindowTitleChange:
@@ -239,10 +263,12 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
     def stateChangeHandle(self, state):
         if state == Qt.Checked:
             #self.signal.polygon_check_signal.emit(1)
-            self._app.labelList.showItems(True)
+            #self._app.labelList.showItems(True)
+            self._app.togglePolygons(True)
         else:
             #self.signal.polygon_check_signal.emit(0)
-            self._app.labelList.showItems(False)
+            #self._app.labelList.showItems(False)
+            self._app.togglePolygons(False)
 
     # receiver function signal
     def polygon_label_status(self, arg):
@@ -261,7 +287,6 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
 
 
 # The class don't using now
-
 class CustomTitleBar(QtWidgets.QWidget):
     def __init__(self, objname, parentDock, app=None):
         super(CustomTitleBar, self).__init__()
