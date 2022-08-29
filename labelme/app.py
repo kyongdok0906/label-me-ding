@@ -1628,7 +1628,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         shapes = [format_shape(item._shape) for item in self.labelList.getItems()]
         flags = {}
-        for i in range(self.flag_widget.count()):
+        for i in range(self.flag_widget.count()):  # no this part now
             item = self.flag_widget.item(i)
             key = item.text()
             flag = item.checkState() == Qt.Checked
