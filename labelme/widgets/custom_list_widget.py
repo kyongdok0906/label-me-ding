@@ -494,19 +494,23 @@ class topToolWidget(QtWidgets.QWidget):
 
         self.polygon = QToolButton()
         self.polygon.setIcon(utils.newIcon("poly"))
+        self.polygon.setIconSize(QtCore.QSize(20, 20))
         self.polygon.clicked.connect(self.polygonClick)
-        #self.polygon.setFixedSize(50, 50)
+        #self.polygon.setFixedSize(150, 150)
 
         self.rect = QToolButton()
         self.rect.setIcon(utils.newIcon("rect"))
+        self.rect.setIconSize(QtCore.QSize(20, 20))
         self.rect.clicked.connect(self.rectClick)
 
         self.circle = QToolButton()
         self.circle.setIcon(utils.newIcon("circle"))
+        self.circle.setIconSize(QtCore.QSize(20, 20))
         self.circle.clicked.connect(self.circleClick)
 
         self.line = QToolButton()
         self.line.setIcon(utils.newIcon("line"))
+        self.line.setIconSize(QtCore.QSize(20, 20))
         self.line.clicked.connect(self.lineClick)
 
         hbox_layout.addSpacing(20)
@@ -556,3 +560,37 @@ class topToolWidget(QtWidgets.QWidget):
         if self._app is not None:
             self._app.selected_shapType = "line"
             self._app.toggleDrawMode(False, createMode="line")
+
+    def editmodeClick(self):
+        self.polygon.setEnabled(True)
+        self.rect.setEnabled(True)
+        self.circle.setEnabled(True)
+        self.line.setEnabled(True)
+
+    def eventFromMenu(self, mode):
+        if mode == "polygon":
+            self.polygon.setEnabled(False)
+            self.rect.setEnabled(True)
+            self.circle.setEnabled(True)
+            self.line.setEnabled(True)
+        elif mode == "rectangle":
+            self.polygon.setEnabled(True)
+            self.rect.setEnabled(False)
+            self.circle.setEnabled(True)
+            self.line.setEnabled(True)
+        elif mode == "circle":
+            self.polygon.setEnabled(True)
+            self.rect.setEnabled(True)
+            self.circle.setEnabled(False)
+            self.line.setEnabled(True)
+        elif mode == "line":
+            self.polygon.setEnabled(True)
+            self.rect.setEnabled(True)
+            self.circle.setEnabled(True)
+            self.line.setEnabled(False)
+        else:
+            self.polygon.setEnabled(True)
+            self.rect.setEnabled(True)
+            self.circle.setEnabled(True)
+            self.line.setEnabled(True)
+

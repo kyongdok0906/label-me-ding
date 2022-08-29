@@ -295,14 +295,12 @@ class MainWindow(QtWidgets.QMainWindow):
             if self._config[dock]["show"] is False:
                 getattr(self, dock).setVisible(False)
 
+        self.addDockWidget(Qt.TopDockWidgetArea, self.topToolbar_dock)
         # self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.grades_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.products_dock)
         # self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.file_dock)
-
-        self.addDockWidget(Qt.TopDockWidgetArea, self.topToolbar_dock)
 
 
         # Actions
@@ -546,10 +544,10 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         help = action(
-            self.tr("&Tutorial"),
+            self.tr("&Help"),
             self.tutorial,
             icon="help",
-            tip=self.tr("Show tutorial page"),
+            tip=self.tr("Show GitHub page"),
         )
         """
         lang_En = action(
@@ -1180,7 +1178,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
 
     def tutorial(self):
-        url = "https://github.com/wkentaro/labelme/tree/main/examples/tutorial"  # NOQA
+        url = "https://github.com/kingntop/labelme"  # NOQA
         webbrowser.open(url)
     """
     def changelangEn(self):
@@ -1244,6 +1242,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.actions.createLineMode.setEnabled(True)
             self.actions.createPointMode.setEnabled(True)
             self.actions.createLineStripMode.setEnabled(True)
+
+            self.topToolWidget.editmodeClick()
         else:
             if createMode == "polygon":
                 self.actions.createMode.setEnabled(False)
@@ -1252,6 +1252,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.actions.createLineMode.setEnabled(True)
                 self.actions.createPointMode.setEnabled(True)
                 self.actions.createLineStripMode.setEnabled(True)
+
+                self.topToolWidget.eventFromMenu(createMode)
             elif createMode == "rectangle":
                 self.actions.createMode.setEnabled(True)
                 self.actions.createRectangleMode.setEnabled(False)
@@ -1259,6 +1261,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.actions.createLineMode.setEnabled(True)
                 self.actions.createPointMode.setEnabled(True)
                 self.actions.createLineStripMode.setEnabled(True)
+
+                self.topToolWidget.eventFromMenu(createMode)
             elif createMode == "line":
                 self.actions.createMode.setEnabled(True)
                 self.actions.createRectangleMode.setEnabled(True)
@@ -1266,6 +1270,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.actions.createLineMode.setEnabled(False)
                 self.actions.createPointMode.setEnabled(True)
                 self.actions.createLineStripMode.setEnabled(True)
+
+                self.topToolWidget.eventFromMenu(createMode)
             elif createMode == "point":
                 self.actions.createMode.setEnabled(True)
                 self.actions.createRectangleMode.setEnabled(True)
@@ -1273,6 +1279,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.actions.createLineMode.setEnabled(True)
                 self.actions.createPointMode.setEnabled(False)
                 self.actions.createLineStripMode.setEnabled(True)
+
+                self.topToolWidget.eventFromMenu(createMode)
             elif createMode == "circle":
                 self.actions.createMode.setEnabled(True)
                 self.actions.createRectangleMode.setEnabled(True)
@@ -1280,6 +1288,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.actions.createLineMode.setEnabled(True)
                 self.actions.createPointMode.setEnabled(True)
                 self.actions.createLineStripMode.setEnabled(True)
+
+                self.topToolWidget.eventFromMenu(createMode)
             elif createMode == "linestrip":
                 self.actions.createMode.setEnabled(True)
                 self.actions.createRectangleMode.setEnabled(True)
@@ -1287,6 +1297,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.actions.createLineMode.setEnabled(True)
                 self.actions.createPointMode.setEnabled(True)
                 self.actions.createLineStripMode.setEnabled(False)
+
+                self.topToolWidget.eventFromMenu(createMode)
             else:
                 raise ValueError("Unsupported createMode: %s" % createMode)
         self.actions.editMode.setEnabled(not edit)
@@ -2463,7 +2475,10 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 item.setCheckState(Qt.Unchecked)
             self.fileListWidget.addItem(item)
+
         self.openNextImg(load=load)
+        # print("{}".format(self.fileListWidget.count()))
+        self.file_dock.setWindowTitle(self.tr("File List (Total {})".format(self.fileListWidget.count())))
 
     def scanAllImages(self, folderPath):
         extensions = [

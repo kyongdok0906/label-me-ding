@@ -292,6 +292,10 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         if self._parent is not None:
             self._parent.mousePressEventHandle(event, self._shape)
 
+    def mouseDoubleClickEvent(self, event):
+        if self._parent is not None:
+            self._parent.mousePressEventHandle(event, self._shape, "duble")
+
     def changeBackground(self, state):
         if state is True:
             self.setStyleSheet("QWidget { background-color: rgb(204, 232, 255); border: 0; font-size: 12px}")
@@ -343,6 +347,7 @@ class SearchLabelListWidget(QtWidgets.QWidget):
         hb_layout.setContentsMargins(0, 0, 0, 0)
         hb_layout.setSpacing(0)
         self.setLayout(hb_layout)
+        self.setMaximumHeight(300)
 
     def addItems(self, items):
         if len(items) < 1:
@@ -367,7 +372,7 @@ class SearchLabelListWidget(QtWidgets.QWidget):
                 return True
         return False
 
-    def mousePressEventHandle(self, event, shape):
+    def mousePressEventHandle(self, event, shape, mode=None):
         # print("list row click")
         for rowItem in self._itemList:
             if rowItem._shape["label"] == shape["label"]:
@@ -378,7 +383,7 @@ class SearchLabelListWidget(QtWidgets.QWidget):
                 rowItem.changeBackground(False)
                 rowItem._selected = False
 
-        self._parent.labelItemSelected(shape)
+        self._parent.labelItemSelected(shape, mode)
 
     def getSelectedItem(self):
         if self._selected_item is not None:
@@ -476,7 +481,7 @@ class LabelSearchDialog(QtWidgets.QDialog):
         """
         self.setLayout(layout)
 
-    def labelItemSelected(self, shape):
+    def labelItemSelected(self, shape, mode=None):
         #item = self.labelList.currentItem()
         if shape is None:
             return
@@ -487,6 +492,8 @@ class LabelSearchDialog(QtWidgets.QDialog):
 
         if txt is not None and txt != "":
             self.edit.setText(txt)
+        if mode is not None:
+            self.validate()
 
     def validate(self):
         text = self.edit.text()

@@ -147,6 +147,7 @@ class Shape(object):
             vrtx_path = QtGui.QPainterPath()
 
             if self.shape_type == "rectangle":
+                # print("{}".format(len(self.points)))
                 assert len(self.points) in [1, 2]
                 if len(self.points) == 2:
                     rectangle = self.getRectFromLine(*self.points)

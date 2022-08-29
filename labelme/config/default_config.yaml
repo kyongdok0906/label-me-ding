@@ -52,7 +52,7 @@ flag_dock:
   movable: true
   floatable: true
 label_dock:
-  show: true
+  show: false
   closable: true
   movable: true
   floatable: true
