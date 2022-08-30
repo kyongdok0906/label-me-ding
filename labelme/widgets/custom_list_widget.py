@@ -176,7 +176,17 @@ class RowWidgetItem(QtWidgets.QWidget):
     _checked = True
 
     def __init__(self, shape=None, parent=None):
-        self._shape = shape
+
+        if isinstance(shape, Shape):
+            self._shape = shape
+        else:
+            #sp = {"id": shape["id"], "label": shape["label"], "color": shape["color"]}
+            sp = Shape()
+            sp.id = shape["id"]
+            sp.label = shape["label"]
+            sp.color = shape["color"]
+            self._shape = sp
+        #self._shape = shape
         self._parent = parent
 
         super(RowWidgetItem, self).__init__()

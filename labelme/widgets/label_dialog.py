@@ -8,6 +8,7 @@ from qtpy import QtWidgets
 
 from labelme.logger import logger
 import labelme.utils
+from labelme.shape import Shape
 
 QT5 = QT_VERSION[0] == "5"
 
@@ -246,7 +247,11 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
     _selected = False
 
     def __init__(self, shape, parent=None):
-        self._shape = shape
+        if isinstance(shape, Shape):
+            sp = {"id": shape.id, "label": shape.label, "color": shape.color}
+        else:
+            sp = {"id": shape["id"], "label": shape["label"], "color": shape["color"]}
+        self._shape = sp
         self._parent = parent
 
         super(DlgRowWidgetItem, self).__init__()
@@ -255,18 +260,13 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         horizontal_layout.setContentsMargins(0, 0, 0, 0)
 
         label = QtWidgets.QLabel(self)
-        label.setText(shape["label"])
+        txt = self._shape["label"]
+
+        label.setText(txt)
         #label.setStyleSheet("QWidget { font-size: 12px; }")
 
         color_label = QtWidgets.QLabel(self)
-
-        try:
-            color_txt = shape["color"]
-        except:
-            color_txt = shape["COLOR"]
-
-        if not color_txt or "" == color_txt:
-            color_txt = "cyan"
+        color_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "cyan"
 
         color_label.setText("")
         color_label.setStyleSheet("QLabel{border: 1px soild #aaa; border-radius: 7px; background: %s;}" % color_txt)
@@ -571,4 +571,4 @@ class LabelSearchDialog(QtWidgets.QDialog):
         if self.labelList.findItems(shape):
             return
 
-        self.labelList.addItem(item)
+        self.labelList.addItem(shape)

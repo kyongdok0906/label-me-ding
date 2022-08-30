@@ -46,21 +46,22 @@ class Shape(object):
 
     def __init__(
         self,
+        id=None,
         label=None,
-        line_color=None,
+        color=None,
         shape_type=None,
         flags=None,
         group_id=None,
     ):
+        self.id = id
         self.label = label
+        self.color = color
         self.group_id = group_id
         self.points = []
         self.fill = False
         self.selected = False
         self.shape_type = shape_type
         self.flags = flags
-        self.id = ""
-        self.color = ""
         self.other_data = {}
 
         self._highlightIndex = None
@@ -72,11 +73,15 @@ class Shape(object):
 
         self._closed = False
 
-        if line_color is not None:
-            # Override the class line_color attribute
-            # with an object attribute. Currently this
-            # is used for drawing the pending line a different color.
-            self.line_color = line_color
+        if color is not None:
+            Qc = QtGui.QColor(color)
+            r, g, b = Qc.red(), Qc.green(), Qc.blue()
+            self.line_color = QtGui.QColor(r, g, b)
+            #self.vertex_fill_color = QtGui.QColor(r, g, b)
+            #self.hvertex_fill_color = QtGui.QColor(255, 255, 255)
+            #self.fill_color = QtGui.QColor(r, g, b, 128)
+            #self.select_line_color = QtGui.QColor(255, 255, 255)
+            #self.select_fill_color = QtGui.QColor(r, g, b, 155)
 
         self.shape_type = shape_type
 
