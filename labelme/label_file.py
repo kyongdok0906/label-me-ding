@@ -122,9 +122,9 @@ class LabelFile(object):
             )
             shapes = [
                 dict(
-                    id=s["id"],
+                    id=s["id"] if s.get("id") else "0",
                     label=s["label"],
-                    color=s["color"],
+                    color=s["color"] if s.get("id") else "cyan",
                     points=s["points"],
                     shape_type=s.get("shape_type", "polygon"),
                     flags=s.get("flags", {}),

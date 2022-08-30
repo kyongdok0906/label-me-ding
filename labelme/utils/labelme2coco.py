@@ -9,7 +9,7 @@ import PIL.Image
 
 
 class labelme2coco(object):
-    def __init__(self, labelme_json=[], save_json_path="./coco.json"):
+    def __init__(self, labelme_json=[], save_json_path="./lbcoco.json"):
         """
         :param labelme_json: the list of all labelme json file paths
         :param save_json_path: the path to save new json
@@ -28,7 +28,7 @@ class labelme2coco(object):
 
     def data_transfer(self):
         for num, json_file in enumerate(self.labelme_json):
-            with open(json_file, "r") as fp:
+            with open(json_file, "r", encoding="utf-8") as fp:
                 data = json.load(fp)
                 self.images.append(self.image(data, num))
                 for shapes in data["shapes"]:
@@ -141,7 +141,8 @@ class labelme2coco(object):
         os.makedirs(
             os.path.dirname(os.path.abspath(self.save_json_path)), exist_ok=True
         )
-        json.dump(self.data_coco, open(self.save_json_path, "w"), indent=4)
+        #json.dump(self.data_coco, open(self.save_json_path, "w"), indent=4)
+        json.dump(self.data_coco, open(self.save_json_path, "w", encoding="utf-8"), ensure_ascii=False, indent=4)
 
 
 if __name__ == "__main__":

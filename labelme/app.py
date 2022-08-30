@@ -249,7 +249,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileListLayout.setSpacing(0)
         fileListLayout.addWidget(self.fileSearch)
         fileListLayout.addWidget(self.fileListWidget)
-        self.file_dock = QtWidgets.QDockWidget(self.tr("File List"), self)
+        self.file_dock = QtWidgets.QDockWidget(self.tr("File List (Total {})".format(0)), self)
         self.file_dock.setObjectName("Files")
         fileListWidget = QtWidgets.QWidget()
         fileListWidget.setLayout(fileListLayout)
@@ -2271,6 +2271,28 @@ class MainWindow(QtWidgets.QMainWindow):
         if filename and self.saveLabels(filename):
             self.addRecentFile(filename)
             self.setClean()
+
+            #put to coco format
+            # labelme_json = glob.glob(os.path.join(filename, "*.json"))
+            cf = ""
+            try:
+                cocofiles = []
+                cocofiles.append(filename)
+                basename = os.path.basename(filename)
+                coco_fname = os.path.splitext(basename)[0]
+                dirname = os.path.dirname(filename)
+                cf = "{}/{}_coco.{}".format(dirname, coco_fname, "json")
+                labelme2coco(cocofiles, cf)
+            except LabelFileError as e:
+                self.errorMessage(
+                    self.tr("Error creating coco file"),
+                    self.tr(
+                        "<p><b>%s</b></p>"
+                        "<p>Make sure <i>%s</i> is a valid label file."
+                    )
+                    % (e, cf),
+                )
+                pass
 
     def closeFile(self, _value=False):
         if not self.mayContinue():

@@ -1,6 +1,6 @@
 # Guide Labelme 
 ## 1. Setting
-The python must to install on system
+The python must to install on system.  python  >= v 3.x 
 
 The python can download in <a href="https://www.python.org/downloads/">here</a> .
 
