@@ -23,6 +23,7 @@ labelme/config/default_config.yaml
 labelme/icons/cancel.png
 labelme/icons/close.png
 labelme/icons/color-line.png
+labelme/icons/loginuser.png
 labelme/icons/color.png
 labelme/icons/copy.png
 labelme/icons/delete.png
@@ -58,6 +59,7 @@ labelme/icons/undo.png
 labelme/icons/zoom-in.png
 labelme/icons/zoom-out.png
 labelme/icons/zoom.png
+labelme/icons/chg_pwd.png
 labelme/utils/__init__.py
 labelme/utils/_io.py
 labelme/utils/image.py

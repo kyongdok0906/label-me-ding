@@ -34,3 +34,11 @@ from .custom_list_widget import CustomLabelListWidget
 from .signal import Signal
 
 from .custom_list_widget import topToolWidget
+
+from .labelme2coco import labelme2coco
+
+from .processini import ProcessINI
+
+from .loginDlg import LoginDLG
+
+from .pwdDlg import PwdDLG

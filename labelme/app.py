@@ -48,7 +48,8 @@ from labelme.widgets import DockCheckBoxTitleBar
 from labelme.widgets import CustomListWidget
 from labelme.widgets import CustomLabelListWidget
 from labelme.widgets import topToolWidget
-from labelme.utils import labelme2coco
+from labelme.widgets.pwdDlg import PwdDLG
+from labelme.widgets import labelme2coco
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -200,7 +201,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.topToolbar_dock = QtWidgets.QDockWidget(self.tr("Top bar"), self)
         self.topToolbar_dock.setWidget(self.topToolWidget)
         self.topToolbar_dock.setTitleBarWidget(QtWidgets.QWidget())
-        self.topToolWidget.setEnabled(False)
+        self.topToolWidget.setEnabled(True)
 
         """ old code
         self.labelList = LabelListWidget()
@@ -294,6 +295,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
             if self._config[dock]["show"] is False:
                 getattr(self, dock).setVisible(False)
+
+
+        self._pwdDlg = PwdDLG(self._config, self)
 
         self.addDockWidget(Qt.TopDockWidgetArea, self.topToolbar_dock)
         # self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
@@ -548,6 +552,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tutorial,
             icon="help",
             tip=self.tr("Show GitHub page"),
+        )
+        changepwd = action(
+            self.tr("&Change Password"),
+            self.changePasswordAction,
+            icon="chg_pwd",
+            tip=self.tr("To change self password")
         )
         """
         lang_En = action(
@@ -867,7 +877,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 quit,
             ),
         )
-        utils.addActions(self.menus.help, (help,))
+        utils.addActions(self.menus.help, (help, None, changepwd))
         """
         utils.addActions(
             self.menus.lang,
@@ -882,13 +892,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.menus.view,
             (
                 #self.flag_dock.toggleViewAction(),
+                self.topToolbar_dock.toggleViewAction(),
                 self.grades_dock.toggleViewAction(),
                 self.products_dock.toggleViewAction(),
                 #self.label_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
-                self.topToolbar_dock.toggleViewAction(),
-
                 None,
                 fill_drawing,
                 None,
@@ -1148,6 +1157,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(message, delay)
 
     def resetState(self):
+        self.labelList._itemList.clear()
         self.labelList.clear()  # this block now when polygon list is deleted
         self.filename = None
         self.imagePath = None
@@ -1180,6 +1190,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def tutorial(self):
         url = "https://github.com/kingntop/labelme"  # NOQA
         webbrowser.open(url)
+
+    def changePasswordAction(self):
+        status = self._pwdDlg.popUpDlg()
+        print("status of change pwd is %s" % status)
+
     """
     def changelangEn(self):
         print("lang : en : pre lang is " + self._config["local_lang"])
@@ -1510,11 +1525,18 @@ class MainWindow(QtWidgets.QMainWindow):
         cnt = self.labelList.getCountItems() + 1
         for shape in shapes:
             if replace is not True:
-                shape.id = "%04d" % cnt
+                if cnt < 10000:
+                    shape.id = "%04d" % cnt
+                else:
+                    shape.id = "%08d" % cnt
             self.addLabel(shape)
             if replace is not True:
                 cnt = cnt + 1
+
         self.labelList.clearSelection()
+        label_len = len(self.labelList._itemList)
+        self.shape_dock.titleBarWidget().titleLabel.setText(self.tr("Polygon Labels (Total %s)" % label_len))
+
         self._noSelectionSlot = False
         self.canvas.loadShapes(shapes, replace=replace)
 
@@ -1776,7 +1798,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if item:
             self.labelList.clearSelection()
             cnt = self.labelList.getCountItems()
-            item["id"] = "%04d" % (cnt + 1)
+            if (cnt + 1) < 10000:
+                item["id"] = "%04d" % (cnt + 1)
+            else:
+                item["id"] = "%08d" % (cnt + 1)
             shape = self.canvas.setLastLabel(item, flags)
             shape.group_id = group_id
             self.addLabel(shape)
@@ -2020,7 +2045,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status(str(self.tr("Loaded %s")) % osp.basename(str(filename)))
 
         # add ckd
-        self.topToolWidget.setEnabled(True)
+        self.topToolWidget.editmodeClick()
 
         return True
 
@@ -2272,27 +2297,31 @@ class MainWindow(QtWidgets.QMainWindow):
             self.addRecentFile(filename)
             self.setClean()
 
-            #put to coco format
-            # labelme_json = glob.glob(os.path.join(filename, "*.json"))
-            cf = ""
-            try:
-                cocofiles = []
-                cocofiles.append(filename)
-                basename = os.path.basename(filename)
-                coco_fname = os.path.splitext(basename)[0]
-                dirname = os.path.dirname(filename)
-                cf = "{}/{}_coco.{}".format(dirname, coco_fname, "json")
-                labelme2coco(cocofiles, cf)
-            except LabelFileError as e:
-                self.errorMessage(
-                    self.tr("Error creating coco file"),
-                    self.tr(
-                        "<p><b>%s</b></p>"
-                        "<p>Make sure <i>%s</i> is a valid label file."
-                    )
-                    % (e, cf),
+            threading.Timer(0.1, self.putDownCocoFormat, [filename]).start()
+
+    def putDownCocoFormat(self, arg):
+        if arg is None:
+            return
+        # put to coco format
+        cf = ""
+        try:
+            cocofiles = []
+            cocofiles.append(arg)
+            basename = os.path.basename(arg)
+            coco_fname = os.path.splitext(basename)[0]
+            dirname = os.path.dirname(arg)
+            cf = "{}/{}_coco.{}".format(dirname, coco_fname, "json")
+            labelme2coco(cocofiles, cf)
+        except LabelFileError as e:
+            self.errorMessage(
+                self.tr("Error creating coco file"),
+                self.tr(
+                    "<p><b>%s</b></p>"
+                    "<p>Make sure <i>%s</i> is a valid label file."
                 )
-                pass
+                % (e, cf),
+            )
+
 
     def closeFile(self, _value=False):
         if not self.mayContinue():
@@ -2585,9 +2614,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     #self.labelList.addItems(items)
                     self._polyonList.clear()
                     for i in range(len(items)):
-                        idx = "%04d" % (i+1)
+                        if (i+1) < 10000:
+                            idx = "%04d" % (i+1)
+                        else:
+                            idx = "%08d" % (i+1)
                         item = items[i]
-                        nitem = {"id": "0", "label": item["label"], "color": item["color"]}
+                        nitem = {"id": "{}".format(idx), "label": item["label"], "color": item["color"]}
                         self._polyonList.append(nitem)
             else:
                 return QtWidgets.QMessageBox.critical(

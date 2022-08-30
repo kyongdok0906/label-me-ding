@@ -1,7 +1,6 @@
 import argparse
 import codecs
 import logging
-import os.path as osp
 import sys
 import yaml
 from qtpy import QtCore, QtWidgets
@@ -10,7 +9,7 @@ from labelme.app import MainWindow
 from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon
-from labelme.utils.processini import *
+from labelme.widgets.processini import *
 from labelme.utils.function import *
 
 

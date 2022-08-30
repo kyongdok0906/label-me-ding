@@ -22,6 +22,11 @@ def newIcon(icon):
     return QtGui.QIcon(osp.join(":/", icons_dir, "%s.png" % icon))
 
 
+def urlIcon(icon):
+    icons_dir = osp.join(here, "../icons")
+    return osp.join(":/", icons_dir, "%s.png" % icon)
+
+
 def newButton(text, icon=None, slot=None):
     b = QtWidgets.QPushButton(text)
     if icon is not None:
@@ -113,7 +118,7 @@ def LogPrint(error: str):
         f.close()
 
 
-def httpReq(url, method, headers=None, data=None):
+def httpReq(url, method, headers=None, data=None, param=None):
     if method == "get":
         if headers is not None and data is None:  # 1 0
             respone = requests.get(url, headers=headers)

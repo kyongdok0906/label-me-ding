@@ -20,6 +20,7 @@ from .qt import newIcon
 from .qt import newButton
 from .qt import newAction
 from .qt import addActions
+from .qt import urlIcon
 from .qt import labelValidator
 from .qt import struct
 from .qt import distance
@@ -28,7 +29,4 @@ from .qt import fmtShortcut
 
 # add by me newly
 from .qt import newLang
-from .processini import ProcessINI
-from .processini import AppInfoFile
-from .labelme2coco import labelme2coco
 from .qt import httpReq

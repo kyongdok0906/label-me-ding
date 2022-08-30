@@ -1,10 +1,8 @@
 import argparse
 import codecs
 import logging
-import os.path as osp
 import os
 import sys
-import time
 
 import yaml
 from qtpy import QtCore, QtWidgets
@@ -14,10 +12,6 @@ from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon
 
-from labelme.utils import ProcessINI
-from labelme.utils import AppInfoFile
-from labelme.utils.qt import LogPrint
-from labelme.utils.loginDlg import LoginDLG
 from labelme.utils import newLang
 
 

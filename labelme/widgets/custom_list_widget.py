@@ -506,22 +506,26 @@ class topToolWidget(QtWidgets.QWidget):
         self.polygon.setIcon(utils.newIcon("poly"))
         self.polygon.setIconSize(QtCore.QSize(20, 20))
         self.polygon.clicked.connect(self.polygonClick)
+        self.polygon.setEnabled(False)
         #self.polygon.setFixedSize(150, 150)
 
         self.rect = QToolButton()
         self.rect.setIcon(utils.newIcon("rect"))
         self.rect.setIconSize(QtCore.QSize(20, 20))
         self.rect.clicked.connect(self.rectClick)
+        self.rect.setEnabled(False)
 
         self.circle = QToolButton()
         self.circle.setIcon(utils.newIcon("circle"))
         self.circle.setIconSize(QtCore.QSize(20, 20))
         self.circle.clicked.connect(self.circleClick)
+        self.circle.setEnabled(False)
 
         self.line = QToolButton()
         self.line.setIcon(utils.newIcon("line"))
         self.line.setIconSize(QtCore.QSize(20, 20))
         self.line.clicked.connect(self.lineClick)
+        self.line.setEnabled(False)
 
         hbox_layout.addSpacing(20)
         hbox_layout.addWidget(self.polygon, 0, QtCore.Qt.AlignLeft)
@@ -531,7 +535,7 @@ class topToolWidget(QtWidgets.QWidget):
         hbox_layout.addWidget(self.circle, 0, QtCore.Qt.AlignLeft)
         hbox_layout.addSpacing(20)
         hbox_layout.addWidget(self.line, 0, QtCore.Qt.AlignLeft)
-        hbox_layout.addStretch(1)
+        hbox_layout.addStretch()
 
         self.setLayout(hbox_layout)
 

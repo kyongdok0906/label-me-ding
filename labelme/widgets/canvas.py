@@ -443,7 +443,10 @@ class Canvas(QtWidgets.QWidget):
         assert len(self.selectedShapesCopy) == len(self.selectedShapes)
         if copy:
             for i, shape in enumerate(self.selectedShapesCopy):
-                shape.id = "%04d" % idx
+                if idx < 10000:
+                    shape.id = "%04d" % idx
+                else:
+                    shape.id = "%08d" % idx
                 self.shapes.append(shape)
                 self.selectedShapes[i].selected = False
                 self.selectedShapes[i] = shape
