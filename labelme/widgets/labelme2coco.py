@@ -33,8 +33,9 @@ class labelme2coco(object):
                 self.images.append(self.image(data, num))
                 for shapes in data["shapes"]:
                     label = shapes["label"].split("_")
-                    if label not in self.label:
-                        self.label.append(label)
+                    #if label not in self.label: ckd  This delete equal labels
+                    #    self.label.append(label)
+                    self.label.append(label)
                     points = shapes["points"]
                     self.annotations.append(self.annotation(points, label, num))
                     self.annID += 1
@@ -133,7 +134,7 @@ class labelme2coco(object):
         return data_coco
 
     def save_json(self):
-        print("save coco json")
+        print("saving coco json")
         self.data_transfer()
         self.data_coco = self.data2coco()
 

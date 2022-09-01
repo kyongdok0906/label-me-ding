@@ -531,13 +531,7 @@ class LabelSearchDialog(QtWidgets.QDialog):
         #self._curSelectedText = ""
         self.labelList.clear()
         self.labelList.addItems(items)
-        """
-        for pitem in items:
-            lb = pitem["label"]
-            color = pitem["color"]
-            label_list_item = SearchLabelListWidget(text, shap)
-            self.labelList.addItem(label_list_item)
-        """
+
         if self.exec_():
             shape = self.labelList.getShapeSelectedItem()
             if shape:

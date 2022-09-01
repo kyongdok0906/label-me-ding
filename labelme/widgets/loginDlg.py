@@ -14,6 +14,9 @@ class LoginDLG(QWidget):
             config=None
     ):
         super().__init__()
+        self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+        if self._font:
+            self.setFont(self._font)
         self._config = config
         self.initUI()
 

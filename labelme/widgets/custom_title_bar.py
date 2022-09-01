@@ -19,10 +19,18 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         boxLayout.setContentsMargins(1, 1, 1, 1)
 
         self.titleLabel = QLabel(self)
+        lang = self._app._config["local_lang"]
         if self._bartype == "gradesbar":
-            self.titleLabel.setText(self.tr("Grades (Total %s)" % 0))
+            if lang == "ko_KR":
+                self.titleLabel.setText("등급 (총 %s)" % 0)
+            else:
+                self.titleLabel.setText("Grades (Total %s)" % 0)
         if self._bartype == "productsbar":
-            self.titleLabel.setText(self.tr("Products (Total %s)" % 0))
+            if lang == "ko_KR":
+                self.titleLabel.setText("대표 품목 (총 %s)" % 0)
+            else:
+                self.titleLabel.setText("Products (Total %s)" % 0)
+
 
         self.hidnBtn = QtWidgets.QPushButton(self)
         self.hidnBtn.setText('.')
@@ -30,26 +38,22 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         self.hidnBtn.clicked.connect(self.clickProgramicallyBtn)  # must click this button Programically
         self.hidnBtn.hide()
 
+        ninput = "New Input"
+        if lang == "ko_KR":
+            ninput = "신규 입력"
         if self._bartype == "gradesbar" and self._app._config["grade_yn"] == "Y":
-            self.newLabel = QLabel(str("New Input"))
+            self.newLabel = QLabel(ninput)
             self.titleEdit = QLineEdit(self)
             # self.titleEdit.hide()
             #self.titleEdit.editingFinished.connect(self.finishEdit)
             self.titleEdit.returnPressed.connect(self.returnPresshandle)
 
         elif self._bartype == "productsbar" and self._app._config["product_yn"] == "Y":
-            self.newLabel = QLabel(str("New Input"))
+            self.newLabel = QLabel(ninput)
             self.titleEdit = QLineEdit(self)
             # self.titleEdit.hide()
             #self.titleEdit.editingFinished.connect(self.finishEdit)
             self.titleEdit.returnPressed.connect(self.returnPresshandle)
-
-        """
-         iconSize = QApplication.style().standardIcon(
-            QStyle.SP_TitleBarNormalButton).actualSize(
-                QtCore.QSize(100, 100))
-        buttonSize = iconSize + QtCore.QSize(4, 4)
-        """
 
         self.dockButton = QToolButton(self)
         #self.dockButton.setIcon(QApplication.style().standardIcon(QStyle.SP_TitleBarNormalButton))
@@ -194,7 +198,10 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
         boxLayout.setContentsMargins(1, 1, 1, 1)
 
         self.titleLabel = QLabel(self)
-        self.titleLabel.setText(self.tr("Polygon Labels (Total %s)" % 0))
+        polyT = "Polygon Labels (Total %s)"
+        if self._app._config["local_lang"] == "ko_KR":
+            polyT = "다각형 레이블 (총 %s)"
+        self.titleLabel.setText(polyT % 0)
 
         self.hidnBtn = QtWidgets.QPushButton(self)
         self.hidnBtn.setText('')
@@ -306,16 +313,24 @@ class CustomTitleBar(QtWidgets.QWidget):
         hbox_layout.setContentsMargins(0, 0, 0, 0)
 
         if self.objectName() == "gradesbar":
-            self.title_lb = QLabel(self.tr("Grades (Total %s)" % 0))
+            if self._app._config["local_lang"] == "ko_KR":
+                self.title_lb = QLabel("등급 (총 %s)" % 0)
+            else:
+                self.title_lb = QLabel("Grades (Total %s)" % 0)
         elif self.objectName() == "productsbar":
-            self.title_lb = QLabel(self.tr("Product (Total %s)" % 0))
+            if self._app._config["local_lang"] == "ko_KR":
+                self.title_lb = QLabel("대표 품목 (총 %s)" % 0)
+            else:
+                self.title_lb = QLabel("Products (Total %s)" % 0)
         # self.title_lb.setStyleSheet("QWidget { background-color: rgb(227, 227, 227); }")
         hbox_layout.addWidget(self.title_lb, 0, QtCore.Qt.AlignLeft)
 
         tmp = QLabel()
         hbox_layout.addWidget(tmp, 1, QtCore.Qt.AlignLeft)
-
-        self.title_nw_lb = QLabel(self.tr("New Input"))
+        lbname = "New Input"
+        if self._app._config["local_lang"] == "ko_KR":
+            lbname = "신규 입력"
+        self.title_nw_lb = QLabel(lbname)
         self.title_nw_lb.setMaximumWidth(70)
 
         self.input_line_edit = QLineEdit()

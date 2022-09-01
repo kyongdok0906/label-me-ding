@@ -112,6 +112,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle(__appname__)
 
+        self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+        if self._font:
+            self.setFont(self._font)
+
+
         # Whether we need to save or not.
         self.dirty = False
 
@@ -120,17 +125,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._copied_shapes = None
 
         # Main widgets and related state.
-        """        
-        self.labelDialog = LabelDialog(
-            parent=self,
-            labels=self._config["labels"],
-            sort_labels=self._config["sort_labels"],
-            show_text_field=self._config["show_label_text_field"],
-            completion=self._config["label_completion"],
-            fit_to_content=self._config["fit_to_content"],
-            flags=self._config["label_flags"],
-        )
-        """
 
         self.labelDialog = LabelSearchDialog(
             text=self.tr("Enter Label for searching"),
@@ -139,15 +133,6 @@ class MainWindow(QtWidgets.QMainWindow):
             fit_to_content=self._config["fit_to_content"],
         )
 
-        # flags part after delete
-        self.flag_dock = self.flag_widget = None
-        self.flag_dock = QtWidgets.QDockWidget(self.tr("Flags"), self)
-        self.flag_dock.setObjectName("Flags")
-        self.flag_widget = QtWidgets.QListWidget()
-        if self._config["flags"]:
-            self.loadFlags({k: False for k in self._config["flags"]})
-        self.flag_dock.setWidget(self.flag_widget)
-        self.flag_widget.itemChanged.connect(self.setDirty)
 
         # grades part ckd
         self.selected_grade = None
@@ -195,6 +180,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.customLabelTitleBar = DockCheckBoxTitleBar(self, self.shape_dock)
         self.shape_dock.setTitleBarWidget(self.customLabelTitleBar)
         self.shape_dock.setWidget(self.labelList)
+
         # top Tool area
         self.selected_shapType = None
         self.topToolWidget = topToolWidget("toptool", self)
@@ -203,40 +189,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.topToolbar_dock.setTitleBarWidget(QtWidgets.QWidget())
         self.topToolWidget.setEnabled(True)
 
-        """ old code
-        self.labelList = LabelListWidget()
-        self.lastOpenDir = None
-
-        self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
-        self.labelList.itemDoubleClicked.connect(self.editLabel)
-        self.labelList.itemChanged.connect(self.labelItemChanged)
-        self.labelList.itemDropped.connect(self.labelOrderChanged)
-        self.shape_dock = QtWidgets.QDockWidget(
-            self.tr("Polygon Labels"), self
-        )
-        self.shape_dock.setObjectName("Labels")
-        self.shape_dock.setWidget(self.labelList)
-        """
-
-        # after delete
-        self.uniqLabelList = UniqueLabelQListWidget()
-        self.uniqLabelList.setToolTip(
-            self.tr(
-                "Select label to start annotating for it. "
-                "Press 'Esc' to deselect."
-            )
-        )
-
-        if self._config["labels"]:
-            for label in self._config["labels"]:
-                item = self.uniqLabelList.createItemFromLabel(label)
-                self.uniqLabelList.addItem(item)
-                rgb = self._get_rgb_by_label(label)
-                self.uniqLabelList.setItemLabel(item, label, rgb)
-        self.label_dock = QtWidgets.QDockWidget(self.tr("Label List"), self)
-        self.label_dock.setObjectName("Label List")
-        self.label_dock.setWidget(self.uniqLabelList)
-        # after delete
 
         self.fileSearch = QtWidgets.QLineEdit()
         self.fileSearch.setPlaceholderText(self.tr("Search Filename"))
@@ -250,7 +202,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileListLayout.setSpacing(0)
         fileListLayout.addWidget(self.fileSearch)
         fileListLayout.addWidget(self.fileListWidget)
-        self.file_dock = QtWidgets.QDockWidget(self.tr("File List (Total {})".format(0)), self)
+        self.file_dock = QtWidgets.QDockWidget(self.tr("File List"), self)
         self.file_dock.setObjectName("Files")
         fileListWidget = QtWidgets.QWidget()
         fileListWidget.setLayout(fileListLayout)
@@ -282,8 +234,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setCentralWidget(scrollArea)
 
+
         features = QtWidgets.QDockWidget.DockWidgetFeatures()
-        for dock in ["flag_dock", "grades_dock", "products_dock", "label_dock", "shape_dock", "file_dock"]:
+        for dock in ["grades_dock", "products_dock", "shape_dock", "file_dock"]:
             if self._config[dock]["closable"]:
                 features = features | QtWidgets.QDockWidget.DockWidgetClosable
             if self._config[dock]["floatable"]:
@@ -300,10 +253,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._pwdDlg = PwdDLG(self._config, self)
 
         self.addDockWidget(Qt.TopDockWidgetArea, self.topToolbar_dock)
-        # self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.grades_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.products_dock)
-        # self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.file_dock)
 
 
@@ -559,26 +511,7 @@ class MainWindow(QtWidgets.QMainWindow):
             icon="chg_pwd",
             tip=self.tr("To change self password")
         )
-        """
-        lang_En = action(
-            self.tr("&English"),
-            self.changelangEn,
-            icon=None,
-            tip=self.tr("Convert to English"),
-        )
-        lang_Ko = action(
-            self.tr("&Korean"),
-            self.changelangKo,
-            icon=None,
-            tip=self.tr("Convert to Korean"),
-        )
-        lang_Zh = action(
-            self.tr("&Chinese"),
-            self.changelangZh,
-            icon=None,
-            tip=self.tr("Convert to Chinese"),
-        )
-        """
+
         zoom = QtWidgets.QWidgetAction(self)
         zoom.setDefaultWidget(self.zoomWidget)
         self.zoomWidget.setWhatsThis(
@@ -692,62 +625,10 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         fill_drawing.trigger()
         
-        # add ckd //
-        """
-        createModeTop = action(
-            self.tr("Create Polygons"),
-            lambda: self.toggleDrawMode(False, createMode="polygon"),
-            shortcuts["create_polygon"],
-            "objects",
-            self.tr("Start drawing polygons"),
-            enabled=False,
-        )
-        createRectangleModeTop = action(
-            self.tr("Create Rectangle"),
-            lambda: self.toggleDrawMode(False, createMode="rectangle"),
-            shortcuts["create_rectangle"],
-            "objects",
-            self.tr("Start drawing rectangles"),
-            enabled=False,
-        )
-        createCircleModeTop = action(
-            self.tr("Create Circle"),
-            lambda: self.toggleDrawMode(False, createMode="circle"),
-            shortcuts["create_circle"],
-            "objects",
-            self.tr("Start drawing circles"),
-            enabled=False,
-        )
-        createLineModeTop = action(
-            self.tr("Create Line"),
-            lambda: self.toggleDrawMode(False, createMode="line"),
-            shortcuts["create_line"],
-            "objects",
-            self.tr("Start drawing lines"),
-            enabled=False,
-        )
-        createPointModeTop = action(
-            self.tr("Create Point"),
-            lambda: self.toggleDrawMode(False, createMode="point"),
-            shortcuts["create_point"],
-            "objects",
-            self.tr("Start drawing points"),
-            enabled=False,
-        )
-        createLineStripModeTop = action(
-            self.tr("Create LineStrip"),
-            lambda: self.toggleDrawMode(False, createMode="linestrip"),
-            shortcuts["create_linestrip"],
-            "objects",
-            self.tr("Start drawing linestrip. Ctrl+LeftClick ends creation."),
-            enabled=False,
-        )
-        """
-        # //add ckd
 
         # Label list context menu.
         labelMenu = QtWidgets.QMenu()
-        #utils.addActions(labelMenu, (edit, delete))
+        utils.addActions(labelMenu, (edit, delete))
         utils.addActions(labelMenu, (delete, ))
         self.labelList.setContextMenuPolicy(Qt.CustomContextMenu)
         self.labelList.customContextMenuRequested.connect(
@@ -780,13 +661,6 @@ class MainWindow(QtWidgets.QMainWindow):
             createLineMode=createLineMode,
             createPointMode=createPointMode,
             createLineStripMode=createLineStripMode,
-
-            # createModeTop=createModeTop,
-            # createRectangleModeTop=createRectangleModeTop,
-            # createCircleModeTop=createCircleModeTop,
-            # createLineModeTop=createLineModeTop,
-            # createPointModeTop=createPointModeTop,
-            # createLineStripModeTop=createLineStripModeTop,
 
             zoom=zoom,
             zoomIn=zoomIn,
@@ -878,24 +752,13 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
         )
         utils.addActions(self.menus.help, (help, None, changepwd))
-        """
-        utils.addActions(
-            self.menus.lang,
-            (
-                lang_En,
-                lang_Ko,
-                lang_Zh,
-             )
-        )
-        """
+
         utils.addActions(
             self.menus.view,
             (
-                #self.flag_dock.toggleViewAction(),
                 self.topToolbar_dock.toggleViewAction(),
                 self.grades_dock.toggleViewAction(),
                 self.products_dock.toggleViewAction(),
-                #self.label_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
                 None,
@@ -952,20 +815,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         # add ckd
-        self.toptools = self.toptoolbar("Top")
+        #self.toptools = self.toptoolbar("Top")
         # Menu buttons on Left
-        """
-         self.actions.toptool = (
-            createModeTop,
-            createRectangleModeTop,
-            createCircleModeTop,
-            createLineModeTop,
-            createPointModeTop,
-            createLineStripModeTop
-        )
-        """
-
-
         self.statusBar().showMessage(str(self.tr("%s started.")) % __appname__)
         self.statusBar().show()
 
@@ -1031,10 +882,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.zoomWidget.valueChanged.connect(self.paintCanvas)
 
         self.populateModeActions()
+        # self.addRecentFilesToList("first")  # add ckd
 
-        # self.firstStart = True
-        # if self.firstStart:
-        #    QWhatsThis.enterWhatsThisMode()
+    # self.firstStart = True
+    # if self.firstStart:
+    #    QWhatsThis.enterWhatsThisMode()
+
+    # add recent files
+    def addRecentFilesToList(self):
+        self.fileListWidget.clear()
+        for fname in self.recentFiles:
+            extensions = [
+                ".%s" % fmt.data().decode().lower()
+                for fmt in QtGui.QImageReader.supportedImageFormats()
+            ]
+            if fname.lower().endswith(tuple(extensions)):
+                label_file = osp.splitext(fname)[0] + ".json"
+                if QtCore.QFile.exists(label_file) and LabelFile.is_label_file(label_file):
+                    item = QtWidgets.QListWidgetItem(fname)
+                    self.fileListWidget.addItem(item)
+                    # print(fname)
+            # print("first recent file : ", fname)
+
+
 
     def menu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
@@ -1087,21 +957,6 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         utils.addActions(self.menus.edit, actions + self.actions.editMenu)
 
-    """
-    def grades_dock_toggleViewAction(self):
-        if self.grades_dock.isFloating() is True:
-            self.grade_title_bar.minmaxbtn.setVisible(False)
-            # self.grades_dock.setStyleSheet("QWidget { border: 1px solid #000; }")
-        else:
-            self.grade_title_bar.minmaxbtn.setVisible(True)
-    
-    def products_dock_toggleViewAction(self):
-    if self.products_dock.isFloating() is True:
-        self.products_title_bar.minmaxbtn.setVisible(False)
-        # self.grades_dock.setStyleSheet("QWidget { border: 1px solid #000; }")
-    else:
-        self.products_title_bar.minmaxbtn.setVisible(True)
-    """
 
     def setvisibilityChange(self):
         print("setvisibilityChange")
@@ -1157,8 +1012,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(message, delay)
 
     def resetState(self):
-        self.labelList._itemList.clear()
         self.labelList.clear()  # this block now when polygon list is deleted
+        self.labelList.clearlistLayout()
         self.filename = None
         self.imagePath = None
         self.imageData = None
@@ -1178,12 +1033,14 @@ class MainWindow(QtWidgets.QMainWindow):
         elif len(self.recentFiles) >= self.maxRecent:
             self.recentFiles.pop()
         self.recentFiles.insert(0, filename)
+        # add ckd after open
+        # self.addRecentFilesToList()
 
     # Callbacks
 
     def undoShapeEdit(self):
         self.canvas.restoreShape()
-        self.labelList.clear()
+        self.labelList.clearlistLayout()
         self.loadShapes(self.canvas.shapes)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
 
@@ -1195,49 +1052,7 @@ class MainWindow(QtWidgets.QMainWindow):
         status = self._pwdDlg.popUpDlg()
         print("status of change pwd is %s" % status)
 
-    """
-    def changelangEn(self):
-        print("lang : en : pre lang is " + self._config["local_lang"])
-        if self._config["local_lang"] != "en_US.qm" or self._config["local_lang"] != "null":
-            self._app.removeTranslator(self._trans_obj)
-            translator = QtCore.QTranslator(self._app)
-            if translator.load(os.getcwd() + "\\translate\\en_US.qm"):
-                self._app.installTranslator(translator)
-                self._config["local_lang"] = "null"
-                LogPrint(str("loaded translator"))
-            else:
-                LogPrint(str("non loaded translator"))
-            self._trans_obj = translator
-        return
 
-    def changelangKo(self):
-        print("lang : en : pre lang is " + self._config["local_lang"])
-        if self._config["local_lang"] != "ko_KR.qm":
-            self._app.removeTranslator(self._trans_obj)
-            translator = QtCore.QTranslator(self._app)
-            if translator.load(os.getcwd() + "\\translate\\ko_KR.qm"):
-                self._app.installTranslator(translator)
-                self._config["local_lang"] = "ko_KR.qm"
-                LogPrint(str("loaded translator"))
-            else:
-                LogPrint(str("non loaded translator"))
-            self._trans_obj = translator
-        return
-
-    def changelangZh(self):
-        print("lang : en : pre lang is " + self._config["local_lang"])
-        if self._config["local_lang"] != "zh_CN.qm":
-            self._app.removeTranslator(self._trans_obj)
-            translator = QtCore.QTranslator(self._app)
-            if translator.load(os.getcwd() + "\\translate\\zh_CN.qm"):
-                self._app.installTranslator(translator)
-                self._config["local_lang"] = "zh_CN.qm"
-                LogPrint(str("loaded translator"))
-            else:
-                LogPrint(str("non loaded translator"))
-            self._trans_obj = translator
-        return
-    """
     def toggleDrawingSensitive(self, drawing=True):
         """Toggle drawing sensitive.
         In the middle of drawing, toggling between modes should be disabled.
@@ -1346,11 +1161,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._config["validate_label"] is None:
             return True
 
-        for i in range(self.uniqLabelList.count()):
-            label_i = self.uniqLabelList.item(i).data(Qt.UserRole)
-            if self._config["validate_label"] in ["exact"]:
-                if label_i == label:
-                    return True
         return False
 
     def editLabel(self, item=None):
@@ -1441,8 +1251,9 @@ class MainWindow(QtWidgets.QMainWindow):
         for shape in self.canvas.selectedShapes:
             shape.selected = True
             item = self.labelList.findItemByShape(shape)
-            self.labelList.selectItem(item)
-            #self.labelList.scrollToItem(item)
+            if item:
+                self.labelList.selectItem(item)
+                # self.labelList.scrollToItem(item)
         self._noSelectionSlot = False
         n_selected = len(selected_shapes)
         self.actions.delete.setEnabled(n_selected)
@@ -1451,44 +1262,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.edit.setEnabled(n_selected == 1)
 
     def addLabel(self, shape):
-        """
-        if shape.group_id is None:
-            text = shape.label
-        else:
-            text = "{} ({})".format(shape.other_data["label"], shape.group_id)
-        label_list_item = LabelListWidgetItem(text, shape)
-        """
+        # Add polygon list
         self.labelList.addItem(shape)
-        """
-        if not self.uniqLabelList.findItemsByLabel(shape.label):
-            item = self.uniqLabelList.createItemFromLabel(shape.label)
-            self.uniqLabelList.addItem(item)
-            rgb = self._get_rgb_by_label(shape.label)
-            self.uniqLabelList.setItemLabel(item, shape.label, rgb)
-        """
         self.labelDialog.addLabelHistory(shape)
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
 
         self._update_shape_color(shape)
+        # update polygon count ckd
+        prodT = "Polygon Labels (Total %s)"
+        if self._config["local_lang"] == "ko_KR":
+            prodT = "다각형 레이블 (총 %s)"
+        self.shape_dock.titleBarWidget().titleLabel.setText(prodT % self.labelList.getCountItems())
 
-        """
-        label_list_item.setText(
-            '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
-                html.escape(text), *shape.fill_color.getRgb()[:3]
-            )
-        )
-        """
     def _update_shape_color(self, shape):
-        """
-        r, g, b = self._get_rgb_by_label(shape.label)
-        shape.line_color = QtGui.QColor(r, g, b)
-        shape.vertex_fill_color = QtGui.QColor(r, g, b)
-        shape.hvertex_fill_color = QtGui.QColor(255, 255, 255)
-        shape.fill_color = QtGui.QColor(r, g, b, 128)
-        shape.select_line_color = QtGui.QColor(255, 255, 255)
-        shape.select_fill_color = QtGui.QColor(r, g, b, 155)
-        """
         sc = shape.color if shape.color else "cyan"
         Qc = QtGui.QColor(sc)
         r, g, b = Qc.red(), Qc.green(), Qc.blue()
@@ -1518,7 +1305,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def remLabels(self, shapes):
         for shape in shapes:
             item = self.labelList.findItemByShape(shape)
-            self.labelList.removeItem(item)
+            if item:
+                self.labelList.removeItem(item)
+
+        self.labelList.list_label_repaint()
 
     def loadShapes(self, shapes, replace=True):
         self._noSelectionSlot = True
@@ -1534,8 +1324,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 cnt = cnt + 1
 
         self.labelList.clearSelection()
-        label_len = len(self.labelList._itemList)
-        self.shape_dock.titleBarWidget().titleLabel.setText(self.tr("Polygon Labels (Total %s)" % label_len))
 
         self._noSelectionSlot = False
         self.canvas.loadShapes(shapes, replace=replace)
@@ -1597,44 +1385,21 @@ class MainWindow(QtWidgets.QMainWindow):
             # item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             # item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
             self.products_widget.addItem(item)
-        self.products_title_bar.titleLabel.setText(self.tr("Products (Total %s)" % self.products_widget.__len__()))
-
-    # no using now
-    def LoadLabelByGrade(self, shape):
-        if shape.group_id is None:
-            text = shape.label
+        lang = self._config["local_lang"]
+        if lang == "ko_KR":
+            self.products_title_bar.titleLabel.setText("대표 품목 (총 %s)" % self.products_widget.__len__())
         else:
-            text = "{} ({})".format(shape.label, shape.group_id)
-        label_list_item = LabelListWidgetItem(text, shape)
-        self.labelList.addItem(label_list_item)
-        if not self.uniqLabelList.findItemsByLabel(shape.label):
-            item = self.uniqLabelList.createItemFromLabel(shape.label)
-            self.uniqLabelList.addItem(item)
-            rgb = self._get_rgb_by_label(shape.label)
-            self.uniqLabelList.setItemLabel(item, shape.label, rgb)
-        self.labelDialog.addLabelHistory(shape.label)
-        for action in self.actions.onShapesPresent:
-            action.setEnabled(True)
+            self.products_title_bar.titleLabel.setText("Products (Total %s)" % self.products_widget.__len__())
 
-        self._update_shape_color(shape)
-        label_list_item.setText(
-            '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
-                html.escape(text), *shape.fill_color.getRgb()[:3]
-            )
-        )
 
     def addProduct(self, new_str):
         item = QtWidgets.QListWidgetItem(new_str)
         self.products_widget.insertItem(0, item)
-        self.products_title_bar.titleLabel.setText(self.tr("Products (Total %s)" % self.products_widget.__len__()))
+        if lang == "ko_KR":
+            self.products_title_bar.titleLabel.setText("대표 품목 (총 %s)" % self.products_widget.__len__())
+        else:
+            self.products_title_bar.titleLabel.setText("Products (Total %s)" % self.products_widget.__len__())
 
-    def loadFlags(self, flags):
-        self.flag_widget.clear()
-        for key, flag in flags.items():
-            item = QtWidgets.QListWidgetItem(key)
-            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
-            self.flag_widget.addItem(item)
 
     def saveLabels(self, filename):
         lf = LabelFile()
@@ -1660,11 +1425,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         shapes = [format_shape(item._shape) for item in self.labelList.getItems()]
         flags = {}
-        for i in range(self.flag_widget.count()):  # no this part now
-            item = self.flag_widget.item(i)
-            key = item.text()
-            flag = item.checkState() == Qt.Checked
-            flags[key] = flag
         try:
             imagePath = osp.relpath(self.imagePath, osp.dirname(filename))
             imageData = self.imageData if self._config["store_data"] else None
@@ -1734,41 +1494,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.loadShapes([item._shape for item in self.labelList.getItems()])
 
     # Callback functions:
-    """
-    def newShape_org(self):
-        items = self.uniqLabelList.selectedItems()
-        text = None
-        if items:
-            text = items[0].data(Qt.UserRole)
-        flags = {}
-        group_id = None
-        if self._config["display_label_popup"] or not text:
-            previous_text = self.labelDialog.edit.text()
-            text, flags, group_id = self.labelDialog.popUp(text)
-            if not text:
-                self.labelDialog.edit.setText(previous_text)
-
-        if text and not self.validateLabel(text):
-            self.errorMessage(
-                self.tr("Invalid label"),
-                self.tr("Invalid label '{}' with validation type '{}'").format(
-                    text, self._config["validate_label"]
-                ),
-            )
-            text = ""
-        if text:
-            self.labelList.clearSelection()
-            shape = self.canvas.setLastLabel(text, flags)
-            shape.group_id = group_id
-            self.addLabel(shape)
-            self.actions.editMode.setEnabled(True)
-            self.actions.undoLastPoint.setEnabled(False)
-            self.actions.undo.setEnabled(True)
-            self.setDirty()
-        else:
-            self.canvas.undoLastLine()
-            self.canvas.shapesBackups.pop()
-    """
 
     def newShape(self):
         #items = self._polyonList[:]
@@ -1798,10 +1523,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if item:
             self.labelList.clearSelection()
             cnt = self.labelList.getCountItems()
-            if (cnt + 1) < 10000:
-                item["id"] = "%04d" % (cnt + 1)
+            tcnt = cnt + 1
+            if tcnt < 10000:
+                item["id"] = "%04d" % tcnt
             else:
-                item["id"] = "%08d" % (cnt + 1)
+                item["id"] = "%08d" % tcnt
             shape = self.canvas.setLastLabel(item, flags)
             shape.group_id = group_id
             self.addLabel(shape)
@@ -1989,10 +1715,6 @@ class MainWindow(QtWidgets.QMainWindow):
         flags = {k: False for k in self._config["flags"] or []}
         if self.labelFile:
             self.loadLabels(self.labelFile.shapes)
-            if self.labelFile.flags is not None:
-                flags.update(self.labelFile.flags)
-        self.loadFlags(flags)
-
         # part grades of here ckd
 
         if self._config["keep_prev"] and self.noShapes():
@@ -2103,6 +1825,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue("recentFiles", self.recentFiles)
         # ask the use for where to save the labels
         # self.settings.setValue('window/geometry', self.saveGeometry())
+        self.labelList.clear()
+        self._polyonList.clear()
 
     def dragEnterEvent(self, event):
         extensions = [
@@ -2321,6 +2045,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
                 % (e, cf),
             )
+
+        print("Success save coco json")
 
 
     def closeFile(self, _value=False):
@@ -2614,10 +2340,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     #self.labelList.addItems(items)
                     self._polyonList.clear()
                     for i in range(len(items)):
-                        if (i+1) < 10000:
-                            idx = "%04d" % (i+1)
+                        tcnt = i + 1
+                        if tcnt < 10000:
+                            idx = "%04d" % tcnt
                         else:
-                            idx = "%08d" % (i+1)
+                            idx = "%08d" % tcnt
                         item = items[i]
                         nitem = {"id": "{}".format(idx), "label": item["label"], "color": item["color"]}
                         self._polyonList.append(nitem)
