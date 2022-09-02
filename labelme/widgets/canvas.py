@@ -438,7 +438,7 @@ class Canvas(QtWidgets.QWidget):
 
             self.movingShape = False
 
-    def endMove(self, copy, idx):
+    def endMove(self, copy):
         assert self.selectedShapes and self.selectedShapesCopy
         assert len(self.selectedShapesCopy) == len(self.selectedShapes)
         if copy:
@@ -587,11 +587,11 @@ class Canvas(QtWidgets.QWidget):
         self.storeShapes()
         self.update()
 
-    def duplicateSelectedShapes(self, idx):
+    def duplicateSelectedShapes(self):
         if self.selectedShapes:
             self.selectedShapesCopy = [s.copy() for s in self.selectedShapes]
             self.boundedShiftShapes(self.selectedShapesCopy)
-            self.endMove(copy=True, idx=idx)
+            self.endMove(copy=True)
         return self.selectedShapes
 
     def boundedShiftShapes(self, shapes):

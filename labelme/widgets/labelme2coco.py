@@ -81,11 +81,8 @@ class labelme2coco(object):
             else:
                 height = data["imageHeight"]
                 width = data["imageWidth"]
-        except:
-
+        except AttributeError as e:
             pass
-
-        img = None
         image["height"] = height
         image["width"] = width
         image["id"] = num

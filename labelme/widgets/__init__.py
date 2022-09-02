@@ -31,7 +31,7 @@ from .custom_qlabel import CQLabel
 
 from .custom_list_widget import CustomLabelListWidget
 
-from .custom_list_widget import RowWidgetItem
+from .custom_list_widget import MyCustomWidget
 
 from .signal import Signal
 

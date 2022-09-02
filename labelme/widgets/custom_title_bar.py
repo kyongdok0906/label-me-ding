@@ -269,13 +269,9 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
 
     def stateChangeHandle(self, state):
         if state == Qt.Checked:
-            #self.signal.polygon_check_signal.emit(1)
-            #self._app.labelList.showItems(True)
-            self._app.togglePolygons(True)
+            self._app.labelList.checkStatus(True)
         else:
-            #self.signal.polygon_check_signal.emit(0)
-            #self._app.labelList.showItems(False)
-            self._app.togglePolygons(False)
+            self._app.labelList.checkStatus(False)
 
     # receiver function signal
     def polygon_label_status(self, arg):

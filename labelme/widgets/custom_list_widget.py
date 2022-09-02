@@ -4,7 +4,7 @@ from qtpy.QtGui import QColor, QColorConstants
 from qtpy.QtCore import Qt
 
 from qtpy.QtWidgets import QLayout, QHBoxLayout, QVBoxLayout, \
-    QLabel, QLineEdit, QToolButton, QScrollArea, QStyle
+    QLabel, QLineEdit, QToolButton, QScrollArea, QStyle, QListWidgetItem
 from PyQt5.QtCore import pyqtSlot, QTimer
 from .. import utils
 from labelme.widgets.custom_qlabel import CQLabel
@@ -175,14 +175,14 @@ class CustomListWidget(QtWidgets.QWidget):
             # remove the item from layout
             layout.removeItem(item)
 
-# polygon item
-class RowWidgetItem(QtWidgets.QWidget):
+class MyCustomWidget(QtWidgets.QWidget):
     _shape = None
+    _parent = None
     _checked = True
 
-    def __init__(self, shape=None, parent=None, itemNo=None):
-        super(RowWidgetItem, self).__init__()
-
+    def __init__(self, shape, parent=None, num=None):
+        super(MyCustomWidget, self).__init__(parent)
+        self._parent = parent
         if isinstance(shape, Shape):
             self._shape = shape
         else:
@@ -193,177 +193,92 @@ class RowWidgetItem(QtWidgets.QWidget):
             sp.grade = shape["grade"]
             sp.color = shape["color"]
             self._shape = sp
-        #self._shape = shape
-        self._parent = parent
 
-        horizontal_layout = QtWidgets.QHBoxLayout(self)
-        horizontal_layout.setSpacing(0)
-        horizontal_layout.setContentsMargins(0, 0, 0, 0)
+        self.row = QtWidgets.QHBoxLayout()
+        self.row.setContentsMargins(0, 1, 0, 1)
 
-        self.label = QtWidgets.QLabel(self)
-        if itemNo is not None:
-            if itemNo < 10000:
-                idx = "%04d" % itemNo
+        if num is not None:
+            if num < 10000:
+                idx = "%04d" % num
             else:
-                idx = "%08d" % itemNo
+                idx = "%08d" % num
         else:
-            idx = len(self._parent._itemList)
+            idx = self._parent.count()
             if idx < 10000:
                 idx = "%04d" % idx
             else:
                 idx = "%08d" % idx
 
         self._id = idx
-        self.label.setText("#{}  {}".format(self._id, self._shape.label_display))
-        #label.setStyleSheet("QWidget { font-size: 18px; }")
-        self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-        if self._font:
-            self.label.setFont(self._font)
+        self.label = QtWidgets.QLabel("#{}  {}".format(self._id, self._shape.label_display))
+        font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+        if font:
+            self.label.setFont(font)
 
-        self.color_label = QtWidgets.QLabel(self)
         color_txt = self._shape.color
-
         if not color_txt or "" == color_txt:
             color_txt = "cyan"
 
-        self.color_label.setText("")
-        self.color_label.setStyleSheet("QLabel{border: 1px soild #aaa; border-radius: 7px; background: %s;}" % color_txt)
-        self.color_label.setFixedWidth(8)
+        self.clrlabel = QtWidgets.QLabel()
+        self.clrlabel.setStyleSheet(
+            "QLabel{border: 1px soild #aaa; background: %s;}" % color_txt)
+        self.clrlabel.setFixedWidth(8)
 
-        self.check_box = QtWidgets.QCheckBox(self)
+        self.checkbox = QtWidgets.QCheckBox("")
+        self.checkbox.setCheckState(Qt.Checked)  # Qt.Checked
+        self.checkbox.stateChanged.connect(self.checkBoxStateChangeHandle)
 
-        self.check_box.stateChanged.connect(self.stateChangeHandle)
-        self.check_box.setCheckState(Qt.Checked)  # Qt.Checked
+        self.row.addWidget(self.label)
+        self.row.addStretch()
+        self.row.addWidget(self.clrlabel)
+        self.row.addSpacing(6)
+        self.row.addWidget(self.checkbox)
+        self.row.addSpacing(33)
+        self.setLayout(self.row)
+        self.setContentsMargins(6, 3, 6, 3)
 
-        horizontal_layout.addSpacing(6)
-        horizontal_layout.addWidget(self.label, 0, QtCore.Qt.AlignLeft)
-        horizontal_layout.addSpacing(6)
-        horizontal_layout.addWidget(self.color_label, 0, QtCore.Qt.AlignLeft)
-        horizontal_layout.addStretch()
-        horizontal_layout.addSpacing(6)
-        horizontal_layout.addWidget(self.check_box, 0, QtCore.Qt.AlignRight)
-        horizontal_layout.addSpacing(40)
-        self.setLayout(horizontal_layout)
-        self.setStyleSheet("QWidget { background-color: rgb(255, 255, 255); border: 0;}")
-
-        self.setAutoFillBackground(True)
-
-
-    def enterEvent(self, event):
-        print("enterEvent", self._id)
-
-
-    def reSetName(self, num):
-        if num < 10000:
-            idx = "%04d" % num
+    def checkBoxStateChangeHandle(self, state):
+        if state == Qt.Checked:
+            self._checked = True
         else:
-            idx = "%08d" % num
+            self._checked = False
+        self._parent._app.labelItemChanged(self)
+
+    def reDraw(self, idn):
+        if idn < 10000:
+            idx = "%04d" % idn
+        else:
+            idx = "%08d" % idn
         self._id = idx
         self.label.setText("#{}  {}".format(self._id, self._shape.label_display))
 
-    def mousePressEvent(self, event):
-        if self._parent is not None:
-            self._parent.itemSelectionChangedEvent(self)
 
-    def changeBackground(self, state):
-        if state is True:
-            #self._shape.selected = True
-            self.setStyleSheet("QWidget { background-color: rgb(204, 232, 255); border: 0;}")
-        else:
-            #self._shape.selected = False
-            self.setStyleSheet("QWidget { background-color: rgb(255, 255, 255); border: 0;}")
-        self.setAutoFillBackground(True)
-
-    def changeTextAndBackground(self):
-        self.label.setText("#{}  {}".format(self._id, self._shape.label_display))
-        self.label.repaint()
-        color_txt = self._shape.color
-        if not color_txt or "" == color_txt:
-            color_txt = "cyan"
-        self.color_label.setStyleSheet(
-            "QLabel{border: 1px soild #aaa; border-radius: 7px; background: %s;}" % color_txt)
-        self.changeBackground(True)
-        self.repaint()
-        #self.color_label.repaint()
-
-    def checkitem(self, flag):
-        if flag is True:
-            self.check_box.setCheckState(Qt.Checked)
-            self._checked = True
-        else:
-            self.check_box.setCheckState(Qt.Unchecked)
-            self._checked = False
-
-    def stateChangeHandle(self, state):
-        if state == Qt.Checked:
-            # self.signal.polygon_check_signal.emit(1)
-            self._checked = True
-        else:
-            # self.signal.polygon_check_signal.emit(0)
-            self._checked = False
-        self._parent.labelItemChanged(self)
 
 # polygon list
-class CustomLabelListWidget(QtWidgets.QWidget):
-    # itemDoubleClicked = QtCore.Signal(CustomLabelListWidgetItem)
-    #itemSelectionChanged = QtCore.Signal(list, list)
-    itemSelectionChanged = QtCore.Signal(list)
+class CustomLabelListWidget(QtWidgets.QListWidget):
+    itemSelectionChanged = QtCore.Signal(list, list)
 
     def __init__(self, app):
         super(CustomLabelListWidget, self).__init__()
         #self.signal = Signal()
-        #self.signal.polygon_check_signal.connect(self.polygon_label_status)
         self._app = app
         self._selected_item = []
         self._itemList = []
-        self.setAcceptDrops(True)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.setDefaultDropAction(Qt.MoveAction)
+        self.selectionModel().selectionChanged.connect(
+            self.itemSelectionChangedEvent
+        )
 
-        self.initUI()
-        #if self._app._font:
-        #    self.setFont(self._app._font)
-
-    def initUI(self):
-        self.vContent_layout = QtWidgets.QVBoxLayout(self)
-        self.vContent_layout.setContentsMargins(0, 5, 0, 5)
-        self.vContent_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        self.twidget = QtWidgets.QWidget(self)
-        self.twidget.setLayout(self.vContent_layout)
-        self.twidget.setStyleSheet("QWidget { background-color: rgb(255, 255, 255);}")
-        scroll = QScrollArea()
-        scroll.setWidget(self.twidget)
-        scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        scroll.setWidgetResizable(True)
-
-        hb_layout = QHBoxLayout()
-        hb_layout.addWidget(scroll)
-        hb_layout.setContentsMargins(0, 0, 0, 0)
-        hb_layout.setSpacing(0)
-        self.setLayout(hb_layout)
-
-    def itemSelectionChangedEvent(self, item):
-        selected = []
-        selected.append(item)
-        self.itemSelectionChanged.emit(selected)
-
-    # status of checkbox
-    def labelItemChanged(self, item):
-        self._app.labelItemChanged(item)
-
-    def getShapeSelectedItems(self):
-        sss = []
-        for iem in self._selected_item:
-            sss.append(iem._shape)
-        return sss
-
-    def addItems(self, shapes):
+    def addShapes(self, shapes):
         if len(shapes) < 1:
             return
         self.clear()
         for shape in shapes:
             rowItem = RowWidgetItem(shape, self)
             self.vContent_layout.addWidget(rowItem)
-            self._itemList.append(rowItem)
+            #self._itemList.append(rowItem)
 
         polyT = "Polygon Labels (Total %s)"
         if self._app._config["local_lang"] == "ko_KR":
@@ -371,195 +286,95 @@ class CustomLabelListWidget(QtWidgets.QWidget):
         if self._app.shape_dock:
             self._app.shape_dock.titleBarWidget().titleLabel.setText(polyT % len(self._itemList))
 
+    def itemSelectionChangedEvent(self, selected, deselected):
+        selected = [self.itemFromIndex(i) for i in selected.indexes()]
+        deselected = [self.itemFromIndex(i) for i in deselected.indexes()]
+        self.itemSelectionChanged.emit(selected, deselected)
 
-    def addItem(self, shape):
+
+    def addShape(self, shape):
         if shape:
-            T = self.findItemByShape(shape)
-            if T is None:
-                rowItem = RowWidgetItem(shape, self)
-                self.vContent_layout.addWidget(rowItem)
-                self._itemList.append(rowItem)
-
-
-    def removeItem(self, item):
-        if len(self._itemList) < 1:
-            return
-        try:
-            for i in reversed(range(self.vContent_layout.count())):
-                vitem = self.vContent_layout.itemAt(i)
-                if isinstance(vitem, QtWidgets.QWidgetItem):
-                    # print("widget" + str(item))
-                    vw = vitem.widget()
-                    if vw == item:
-                        vw.close()
-                        self.vContent_layout.removeItem(vitem)
-                        self._itemList.remove(item)
-                        break
-        except:
-            utils.qt.LogPrint('except in removeItem custom_list_widget.py')
-
-    def list_label_resort(self):
-        for i in reversed(range(self.vContent_layout.count())):
-            vitem = self.vContent_layout.itemAt(i)
-            if isinstance(vitem, QtWidgets.QWidgetItem):
-                vw = vitem.widget()
-                if isinstance(vw, RowWidgetItem):
-                    vw.reSetName(i)
-
-        polyT = "Polygon Labels (Total %s)"
-        if self._app._config["local_lang"] == "ko_KR":
-            polyT = "다격형 레이블 (총 %s)"
-        if self._app.shape_dock:
-            self._app.shape_dock.titleBarWidget().titleLabel.setText(polyT % len(self._itemList))
-        self.repaint()
-
-    # no using now
-    def list_label_repaint(self):
-        self.clearlistLayout()
-        for row in range(len(self._itemList)):
-            rowItem = RowWidgetItem(self._itemList[row]._shape, self, row)
-            self.vContent_layout.addWidget(rowItem)
-        #self._selected_item.clear()
-        polyT = "Polygon Labels (Total %s)"
-        if self._app._config["local_lang"] == "ko_KR":
-            polyT = "다격형 레이블 (총 %s)"
-        if self._app.shape_dock:
-            self._app.shape_dock.titleBarWidget().titleLabel.setText(polyT % len(self._itemList))
-        self.repaint()
-
-    def getItems(self):
-        if len(self._itemList) > 0:
-            return self._itemList
-        else:
-            return []
-
-    def getCountItems(self):
-        return len(self._itemList)
-
-    def getCheckedItems(self):
-        checkitems = []
-        for it in range(len(self._itemList)):
-            item = self._itemList[it]
-            if item._checked is True:
-                checkitems.append(item)
-        return checkitems
-
-
-    def clearLayout(self, layout):
-        for i in reversed(range(layout.count())):
-            item = layout.itemAt(i)
-            if isinstance(item, QtWidgets.QWidgetItem):
-                #print("widget" + str(item))
-                item.widget().close()
-                # or
-                # item.widget().setParent(None)
-            elif isinstance(item, QtWidgets.QSpacerItem):
-                #print("spacer " + str(item))
-                # no need to do extra stuff
-                pass
-            else:
-                #print("layout " + str(item))
-                self.clearLayout(item.layout())
-            # remove the item from layout
-            layout.removeItem(item)
-
-    # event check box
-    def showItems(self, flag):
-        if flag == 1:
-            #hide items check
-            #print("ok", flag)
-            for it in range(len(self._itemList)):
-                item = self._itemList[it]
-                item.checkitem(True)
-                # item.hide()
-        else:
-            #show uncheck items
-            #print("err", flag)
-            for it in range(len(self._itemList)):
-                item = self._itemList[it]
-                item.changeBackground(False)
-                item.checkitem(False)
-                #item.show()
-
-    def clear(self):
-        self._itemList.clear()
-        self._selected_item.clear()
-
-    def clearlistLayout(self):
-        self.clearLayout(self.vContent_layout)
+            listitem = QListWidgetItem(self)
+            self.addItem(listitem)
+            row = MyCustomWidget(shape, self)
+            listitem.setSizeHint(row.minimumSizeHint())
+            self.setItemWidget(listitem, row)
+            #self._itemList.append(row)
 
     def findItemByShape(self, shape):
-        if len(self._itemList) < 1:
-            return None
-        for row in range(len(self._itemList)):
-            item = self._itemList[row]
-            if isinstance(shape, Shape):
-                if item._shape == shape:
+        for i in range(self.count()):
+            widgetitem = self.item(i)
+            if isinstance(widgetitem, QListWidgetItem):
+                item = self.itemWidget(widgetitem)
+                if item and item._shape == shape:
                     return item
-            else:
-                if item._shape == shape._shape:
-                    return item
-        # utils.qt.LogPrint("cannot find shape: {}".format(shape.label).encode('utf-8'))
+
         return None
-        #raise ValueError("cannot find shape: {}".format(shape))
 
-    def selectItem(self, pitem):
-        for it in range(len(self._itemList)):
-            item = self._itemList[it]
-            if item == pitem:
-                item.changeBackground(True)
-                item.repaint()
-                # T, x = self.findSelectedItem(item)
-                # if T is False:
-                self._selected_item.append(item)
-                break
+    def findWidgetItemByItem(self, pitem):
+        for i in range(self.count()):
+            widgetitem = self.item(i)
+            if isinstance(widgetitem, QListWidgetItem):
+                item = self.itemWidget(widgetitem)
+                if item and item._shape == pitem._shape:
+                    return widgetitem, i
 
-    def findSelectedItem(self, pitem):
-        i = 0
-        for item in self._selected_item:
-            if item == pitem:
-                return True, i
-            i = i + 1
-        return False, -1
-
-    def findItem(self, pitem):
-        for row in range(len(self._itemList)):
-            item = self._itemList[row]
-            if item == pitem:
-                return True
-        return False
+        return None, 0
 
     def selectedItems(self):
-        return self._selected_item
+        return [self.itemFromIndex(i) for i in self.selectedIndexes()]
 
-    def clearSelection(self):
-        for item in self._itemList:
-            item.setStyleSheet("QWidget { background-color: rgb(255, 255, 255); border: 0;}")
-        self._selected_item.clear()
+    def selectItem(self, pitem):
+        wdgitem, x = self.findWidgetItemByItem(pitem)
+        if wdgitem is not None:
+            self.setCurrentItem(wdgitem, QtCore.QItemSelectionModel.Select)
 
-    # signal no using now
-    @pyqtSlot(int)
-    def polygon_label_status(self, arg):
-        #print(arg)
-        pass
+    def scrollTooItem(self, item):
+        wdgitem, x = self.findWidgetItemByItem(item)
+        self.scrollToItem(wdgitem)
 
-    def mousePressEvent(self, event):
-        self.itemSelectionChanged.emit([])
+    def checkStatus(self, flag):
+        if flag == 1:
+            for i in range(self.count()):
+                widgetitem = self.item(i)
+                if isinstance(widgetitem, QListWidgetItem):
+                    item = self.itemWidget(widgetitem)
+                    if item and item.checkbox:
+                        item.checkbox.setCheckState(Qt.Checked)
+        else:
+            for i in range(self.count()):
+                widgetitem = self.item(i)
+                if isinstance(widgetitem, QListWidgetItem):
+                    item = self.itemWidget(widgetitem)
+                    if item and item.checkbox:
+                        item.checkbox.setCheckState(Qt.Unchecked)
 
-    def dragMoveEvent(self, event):
-        print("dragMoveEvent")
+    def removeItem(self, item):
+        wg, index = self.findWidgetItemByItem(item)
+        #index = self.indexFromItem(item)
+        self.takeItem(index)
+        #self.removeItemWidget(wg)
 
-    def dragEnterEvent(self, event):
-        print("dragEnterEvent")
+    def reSort(self):
+        for i in range(self.count()):
+            widgetitem = self.item(i)
+            if isinstance(widgetitem, QListWidgetItem):
+                item = self.itemWidget(widgetitem)
+                if item and item.label:
+                    item.reDraw(i + 1)
 
-    def keyPressEvent(self, ev):
-        return
-        modifiers = ev.modifiers()
-        key = ev.key()
-        if key == QtCore.Qt.Key_Control:
-            print("ctrl + ")
-        if QtCore.Qt.ControlModifier == int(modifiers):
-            print("ctrl + 111")
+    def getShapeItems(self):
+        s_items = []
+        for i in range(self.count()):
+            widgetitem = self.item(i)
+            if isinstance(widgetitem, QListWidgetItem):
+                item = self.itemWidget(widgetitem)
+                if item and item._shape:
+                    s_items.append(item)
+        return s_items
+
+
+
 
 class topToolWidget(QtWidgets.QWidget):
     def __init__(self, objname, app=None):

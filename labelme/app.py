@@ -17,7 +17,7 @@ from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy import QtWidgets
-from qtpy.QtWidgets import QLabel
+from qtpy.QtWidgets import QLabel, QListWidgetItem
 from keyboard import press
 # from win32api import GetSystemMetrics
 
@@ -46,8 +46,8 @@ from labelme.utils.qt import httpReq
 from labelme.widgets import DockInPutTitleBar
 from labelme.widgets import DockCheckBoxTitleBar
 from labelme.widgets import CustomListWidget
+from labelme.widgets import MyCustomWidget
 from labelme.widgets import CustomLabelListWidget
-from labelme.widgets import RowWidgetItem
 from labelme.widgets import topToolWidget
 from labelme.widgets.pwdDlg import PwdDLG
 from labelme.widgets import labelme2coco
@@ -169,8 +169,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lastOpenDir = None
         self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
 
-        #self.labelList.itemDoubleClicked.connect(self.editLabel)
         #self.labelList.itemChanged.connect(self.labelItemChanged)
+        #self.labelList.itemDoubleClicked.connect(self.editLabel)
         #self.labelList.itemDropped.connect(self.labelOrderChanged)
 
         self.shape_dock = QtWidgets.QDockWidget(
@@ -937,8 +937,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # Support Functions
 
     def noShapes(self):
-        #return not len(self.labelList)
-        return not self.labelList.getCountItems()
+        return not len(self.labelList)
 
     def populateModeActions(self):
         tool, menu = self.actions.tool, self.actions.menu
@@ -1013,13 +1012,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(message, delay)
 
     def resetState(self):
-        self.labelList.clearlistLayout()
+        #self.labelList.clearlistLayout()
         self.labelList.clear()  # this block now when polygon list is deleted
         # update polygon count ckd
         prodT = "Polygon Labels (Total %s)"
         if self._config["local_lang"] == "ko_KR":
             prodT = "다각형 레이블 (총 %s)"
-        self.shape_dock.titleBarWidget().titleLabel.setText(prodT % self.labelList.getCountItems())
+        self.shape_dock.titleBarWidget().titleLabel.setText(prodT % self.labelList.count())
 
         self.filename = None
         self.imagePath = None
@@ -1054,14 +1053,12 @@ class MainWindow(QtWidgets.QMainWindow):
         elif len(self.recentFiles) >= self.maxRecent:
             self.recentFiles.pop()
         self.recentFiles.insert(0, filename)
-        # add ckd after open
-        # self.addRecentFilesToList()
 
     # Callbacks
 
     def undoShapeEdit(self):
         self.canvas.restoreShape()
-        self.labelList.clearlistLayout()
+        self.labelList.clear()
         self.loadShapes(self.canvas.shapes)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
 
@@ -1198,13 +1195,16 @@ class MainWindow(QtWidgets.QMainWindow):
             item = self.currentItem()
         if item is None:
             return
-        if isinstance(item, RowWidgetItem) is not True:
-            return
-        shape = item._shape
+        shape = None
+        shape_item = None
+        if isinstance(item, QListWidgetItem):
+            shape_item = self.labelList.itemWidget(item)
+            if shape_item:
+                shape = shape_item._shape
         if shape is None:
             return
-        items = copy.deepcopy(self._polyonList)
-        ritem = self.labelDialog.popUpLabelDlg(items, shape, "edit")
+        polyitems = copy.deepcopy(self._polyonList)
+        ritem = self.labelDialog.popUpLabelDlg(polyitems, shape, "edit")
         if ritem is None:
             return
         if not self.validateLabel(ritem["label"]):
@@ -1215,31 +1215,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 ),
             )
             return
+
         shape.label = ritem["label"]
         shape.label_display = ritem["label_display"]
         shape.grade = ritem["grade"]
         shape.color = ritem["color"]
         self._update_shape_color(shape)
-        item._shape = shape
-        item.changeTextAndBackground()
+        # update label
+        if shape_item:
+            if shape_item.label:
+                shape_item.label.setText("#{}  {}".format(shape_item._id, shape.label_display))
+                shape_item.clrlabel.setStyleSheet(
+                    "QLabel{border: 1px soild #aaa; background: %s;}" % shape.color)
 
-        """
-        if shape.group_id is None:
-            item.setText(
-                '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
-                    html.escape(shape.label), *shape.fill_color.getRgb()[:3]
-                )
-            )
-        else:
-            item.setText("{} ({})".format(shape.label, shape.group_id))
-        """
+
         self.setDirty()
-        """
-        if not self.uniqLabelList.findItemsByLabel(shape.label):
-            item = QtWidgets.QListWidgetItem()
-            item.setData(Qt.UserRole, shape.label)
-            self.uniqLabelList.addItem(item)
-        """
+
     def fileSearchChanged(self):
         self.importDirImages(
             self.lastOpenDir,
@@ -1283,7 +1274,7 @@ class MainWindow(QtWidgets.QMainWindow):
             item = self.labelList.findItemByShape(shape)
             if item:
                 self.labelList.selectItem(item)
-                # self.labelList.scrollToItem(item)
+                self.labelList.scrollTooItem(item)
         self._noSelectionSlot = False
         n_selected = len(selected_shapes)
         self.actions.delete.setEnabled(n_selected)
@@ -1293,7 +1284,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def addLabel(self, shape):
         # Add polygon list
-        self.labelList.addItem(shape)
+        self.labelList.addShape(shape)
         self.labelDialog.addLabelHistory(shape)
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
@@ -1303,7 +1294,7 @@ class MainWindow(QtWidgets.QMainWindow):
         prodT = "Polygon Labels (Total %s)"
         if self._config["local_lang"] == "ko_KR":
             prodT = "다각형 레이블 (총 %s)"
-        self.shape_dock.titleBarWidget().titleLabel.setText(prodT % self.labelList.getCountItems())
+        self.shape_dock.titleBarWidget().titleLabel.setText(prodT % self.labelList.count())
 
     def _update_shape_color(self, shape):
         sc = shape.color if shape.color else "cyan"
@@ -1338,24 +1329,13 @@ class MainWindow(QtWidgets.QMainWindow):
             if item:
                 self.labelList.removeItem(item)
 
-
-        self.labelList.list_label_resort()
+        self.labelList.reSort()
 
     def loadShapes(self, shapes, replace=True):
         self._noSelectionSlot = True
-        cnt = self.labelList.getCountItems() + 1
         for shape in shapes:
-            if replace is not True:
-                if cnt < 10000:
-                    shape.id = "%04d" % cnt
-                else:
-                    shape.id = "%08d" % cnt
             self.addLabel(shape)
-            if replace is not True:
-                cnt = cnt + 1
-
         self.labelList.clearSelection()
-
         self._noSelectionSlot = False
         self.canvas.loadShapes(shapes, replace=replace)
 
@@ -1394,16 +1374,7 @@ class MainWindow(QtWidgets.QMainWindow):
             for x, y in points:
                 shape.addPoint(QtCore.QPointF(x, y))
             shape.close()
-            """
-            default_flags = {}
-            if self._config["label_flags"]:
-                for pattern, keys in self._config["label_flags"].items():
-                    if re.match(pattern, label):
-                        for key in keys:
-                            default_flags[key] = False
-            shape.flags = default_flags
-            shape.flags.update(flags)
-            """
+
             shape.other_data = other_data
             s.append(shape)
         self.loadShapes(s)
@@ -1465,8 +1436,7 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             return data
 
-        shapes = [format_shape(item._shape) for item in self.labelList.getItems()]
-        flags = {}
+        shapes = [format_shape(item._shape) for item in self.labelList.getShapeItems()]
         try:
             imagePath = osp.relpath(self.imagePath, osp.dirname(filename))
             imageData = self.imageData if self._config["store_data"] else None
@@ -1499,8 +1469,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
     def duplicateSelectedShape(self):
-        cnt = self.labelList.getCountItems()
-        added_shapes = self.canvas.duplicateSelectedShapes(cnt + 1)
+        added_shapes = self.canvas.duplicateSelectedShapes()
         self.labelList.clearSelection()
         for shape in added_shapes:
             self.addLabel(shape)
@@ -1514,14 +1483,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self._copied_shapes = [s.copy() for s in self.canvas.selectedShapes]
         self.actions.paste.setEnabled(len(self._copied_shapes) > 0)
 
-    def labelSelectionChanged(self, items):
+    def labelSelectionChanged(self):
         if self._noSelectionSlot:
             return
         if self.canvas.editing():
             selected_shapes = []
-            #for item in self.labelList.selectedItems():
-            for item in items:
-                selected_shapes.append(item._shape)
+            for item in self.labelList.selectedItems():
+                if isinstance(item, QListWidgetItem):
+                    _item = self.labelList.itemWidget(item)
+                    selected_shapes.append(_item._shape)
             if selected_shapes:
                 self.canvas.selectShapes(selected_shapes)
             else:
@@ -1529,7 +1499,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def labelItemChanged(self, item):
         shape = item._shape
-        self.canvas.setShapeVisible(shape, item._checked)
+        if shape:
+            self.canvas.setShapeVisible(shape, item._checked)
 
     def labelOrderChanged(self):
         self.setDirty()
@@ -1563,14 +1534,6 @@ class MainWindow(QtWidgets.QMainWindow):
             item = None
         if item:
             self.labelList.clearSelection()
-            """
-            cnt = self.labelList.getCountItems()
-            tcnt = cnt + 1
-            if tcnt < 10000:
-                item["id"] = "%04d" % tcnt
-            else:
-                item["id"] = "%08d" % tcnt
-             """
             shape = self.canvas.setLastLabel(item)
             shape.group_id = group_id
             self.addLabel(shape)
@@ -1671,9 +1634,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.brightnessContrast_values[self.filename] = (brightness, contrast)
 
     def togglePolygons(self, value):
-        #for item in self.labelList:
-        #    item.setCheckState(Qt.Checked if value else Qt.Unchecked)
-        self.labelList.showItems(value)
+        self.labelList.checkStatus(1 if value else 0)
 
     def loadFile(self, filename=None):
         """Load the specified file, or the last opened file if None."""
@@ -2191,10 +2152,18 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.canvas.hShape.points:
             self.canvas.deleteShape(self.canvas.hShape)
             self.remLabels([self.canvas.hShape])
+            polyT = "Polygon Labels (Total %s)"
+            if self._config["local_lang"] == "ko_KR":
+                polyT = "다각형 레이블 (총 %s)"
+            if self.shape_dock:
+                self.shape_dock.titleBarWidget().titleLabel.setText(polyT % len(self.labelList))
+
             self.setDirty()
             if self.noShapes():
                 for action in self.actions.onShapesPresent:
                     action.setEnabled(False)
+
+
 
     def deleteSelectedShape(self):
         yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
@@ -2206,10 +2175,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 self, self.tr("Attention"), msg, yes | no, yes
         ):
             self.remLabels(self.canvas.deleteSelected())
+            polyT = "Polygon Labels (Total %s)"
+            if self._config["local_lang"] == "ko_KR":
+                polyT = "다각형 레이블 (총 %s)"
+            if self.shape_dock:
+                self.shape_dock.titleBarWidget().titleLabel.setText(polyT % len(self.labelList))
+
             self.setDirty()
             if self.noShapes():
                 for action in self.actions.onShapesPresent:
                     action.setEnabled(False)
+
+
 
     def copyShape(self):
         self.canvas.endMove(copy=True)
