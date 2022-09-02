@@ -33,7 +33,30 @@ class labelme2coco(object):
                 self.images.append(self.image(data, num))
                 for shapes in data["shapes"]:
                     label = shapes["label"].split("_")
+                    grade = shapes["grade"].split("_")
                     #if label not in self.label: ckd  This delete equal labels
+                    #    self.label.append(label)
+                    self.label.append(label)
+                    self.categories.append(self.category(grade, label))
+                    points = shapes["points"]
+                    self.annotations.append(self.annotation(points, label, num))
+                    self.annID += 1
+
+        # Sort all text labels so they are in the same order across data splits.
+        #self.label.sort()
+        #for label in self.label:
+        #    self.categories.append(self.category(label))
+        for annotation in self.annotations:
+            annotation["category_id"] = self.getcatid(annotation["category_id"])
+
+    def data_transfer_org(self):
+        for num, json_file in enumerate(self.labelme_json):
+            with open(json_file, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
+                self.images.append(self.image(data, num))
+                for shapes in data["shapes"]:
+                    label = shapes["label"].split("_")
+                    # if label not in self.label: ckd  This delete equal labels
                     #    self.label.append(label)
                     self.label.append(label)
                     points = shapes["points"]
@@ -49,8 +72,19 @@ class labelme2coco(object):
 
     def image(self, data, num):
         image = {}
-        img = utils.img_b64_to_arr(data["imageData"])
-        height, width = img.shape[:2]
+        height = 0
+        width = 0
+        try:
+            if data["imageData"]:
+                img = utils.img_b64_to_arr(data["imageData"])
+                height, width = img.shape[:2]
+            else:
+                height = data["imageHeight"]
+                width = data["imageWidth"]
+        except:
+
+            pass
+
         img = None
         image["height"] = height
         image["width"] = width
@@ -62,9 +96,16 @@ class labelme2coco(object):
 
         return image
 
-    def category(self, label):
+    def category_org(self, label):
         category = {}
         category["supercategory"] = label[0]
+        category["id"] = len(self.categories)
+        category["name"] = label[0]
+        return category
+
+    def category(self, grade, label):
+        category = {}
+        category["supercategory"] = grade[0]
         category["id"] = len(self.categories)
         category["name"] = label[0]
         return category

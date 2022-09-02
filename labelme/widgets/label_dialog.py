@@ -247,10 +247,12 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
     _selected = False
 
     def __init__(self, shape, parent=None):
+
         if isinstance(shape, Shape):
-            sp = {"id": shape.id, "label": shape.label, "color": shape.color}
+            sp = {"grade": shape.grade, "label": shape.label, "label_display": shape.label_display, "color": shape.color}
         else:
-            sp = {"id": shape["id"], "label": shape["label"], "color": shape["color"]}
+            sp = {"grade": shape["grade"], "label": shape["label"], "label_display": shape["label_display"], "color": shape["color"]}
+
         self._shape = sp
         self._parent = parent
 
@@ -473,8 +475,6 @@ class LabelSearchDialog(QtWidgets.QDialog):
         self.edit.setListWidget(self.labelList)
         layout.addWidget(self.labelList)
         # label_flags
-        flags = {}
-        self._flags = flags
         """
         self.flagsLayout = QtWidgets.QVBoxLayout()
         layout.addItem(self.flagsLayout)
@@ -525,12 +525,17 @@ class LabelSearchDialog(QtWidgets.QDialog):
         self.edit.setText("")
 
 
-    def popUpLabelDlg(self, items):
+    def popUpLabelDlg(self, items, shape=None, mode=None):
         self._list_items.clear()
         self._list_items = items[:]
         #self._curSelectedText = ""
         self.labelList.clear()
         self.labelList.addItems(items)
+        if mode and mode == "edit":
+            if isinstance(shape, Shape):
+                self.edit.setText(shape.label)
+            else:
+                self.edit.setText(shape["label"])
 
         if self.exec_():
             shape = self.labelList.getShapeSelectedItem()

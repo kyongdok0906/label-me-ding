@@ -46,22 +46,22 @@ class Shape(object):
 
     def __init__(
         self,
-        id=None,
+        grade=None,
         label=None,
+        label_display=None,
         color=None,
         shape_type=None,
-        flags=None,
         group_id=None,
     ):
-        self.id = id
+        self.grade = grade
         self.label = label
+        self.label_display = label_display
         self.color = color
         self.group_id = group_id
         self.points = []
         self.fill = False
         self.selected = False
         self.shape_type = shape_type
-        self.flags = flags
         self.other_data = {}
 
         self._highlightIndex = None

@@ -443,14 +443,9 @@ class Canvas(QtWidgets.QWidget):
         assert len(self.selectedShapesCopy) == len(self.selectedShapes)
         if copy:
             for i, shape in enumerate(self.selectedShapesCopy):
-                if idx < 10000:
-                    shape.id = "%04d" % idx
-                else:
-                    shape.id = "%08d" % idx
                 self.shapes.append(shape)
                 self.selectedShapes[i].selected = False
                 self.selectedShapes[i] = shape
-                idx = idx + 1
         else:
             for i, shape in enumerate(self.selectedShapesCopy):
                 self.selectedShapes[i].points = shape.points
@@ -825,14 +820,14 @@ class Canvas(QtWidgets.QWidget):
 
                 self.movingShape = False
 
-    def setLastLabel(self, item, flags):
+    def setLastLabel(self, item):
         assert item
         self.shapes[-1].label = item["label"]
-        self.shapes[-1].flags = flags
+        self.shapes[-1].grade = item["grade"]
+        self.shapes[-1].label_display = item["label_display"]
         #self.shapes[-1].line_color = QtGui.QColor(item["color"])
         #self.shapes[-1].fill_color = QtGui.QColor(item["color"])
         self.shapes[-1].color = item["color"]
-        self.shapes[-1].id = item["id"]
 
         self.shapesBackups.pop()
         self.storeShapes()
@@ -895,5 +890,4 @@ class Canvas(QtWidgets.QWidget):
         self.restoreCursor()
         self.pixmap = None
         self.shapesBackups = []
-        # self.selectedShapes = []  # add ckd
         self.update()

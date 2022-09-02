@@ -73,18 +73,17 @@ class LabelFile(object):
             "imageData",
             "imagePath",
             "shapes",  # polygonal annotations
-            "flags",  # image level flags
             "imageHeight",
             "imageWidth",
         ]
         shape_keys = [
-            "id",
+            "grade"
+            "label_display"
             "label",
             "color",
             "points",
             "group_id",
             "shape_type",
-            "flags",
         ]
         try:
             with open(filename, "r") as f:
@@ -113,21 +112,21 @@ class LabelFile(object):
                 # relative path from label file to relative path from cwd
                 imagePath = osp.join(osp.dirname(filename), data["imagePath"])
                 imageData = self.load_image_file(imagePath)
-            flags = data.get("flags") or {}
             imagePath = data["imagePath"]
             self._check_image_height_and_width(
                 base64.b64encode(imageData).decode("utf-8"),
                 data.get("imageHeight"),
                 data.get("imageWidth"),
             )
+
             shapes = [
                 dict(
-                    id=s["id"] if s.get("id") else "0",
+                    grade=s["grade"] if 'grade' in s else s["label"],
                     label=s["label"],
-                    color=s["color"] if s.get("id") else "cyan",
+                    label_display=s["label_display"] if 'label_display' in s else s["label"],
+                    color=s["color"] if 'color' in s else "cyan",
                     points=s["points"],
                     shape_type=s.get("shape_type", "polygon"),
-                    flags=s.get("flags", {}),
                     group_id=s.get("group_id"),
                     other_data={
                         k: v for k, v in s.items() if k not in shape_keys
@@ -144,7 +143,6 @@ class LabelFile(object):
                 otherData[key] = value
 
         # Only replace data after everything is loaded.
-        self.flags = flags
         self.shapes = shapes
         self.imagePath = imagePath
         self.imageData = imageData
@@ -177,7 +175,6 @@ class LabelFile(object):
         imageWidth,
         imageData=None,
         otherData=None,
-        flags=None,
     ):
         if imageData is not None:
             imageData = base64.b64encode(imageData).decode("utf-8")
@@ -186,11 +183,8 @@ class LabelFile(object):
             )
         if otherData is None:
             otherData = {}
-        if flags is None:
-            flags = {}
         data = dict(
             version=__version__,
-            flags=flags,
             shapes=shapes,
             imagePath=imagePath,
             imageData=imageData,
