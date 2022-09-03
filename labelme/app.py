@@ -19,6 +19,7 @@ from qtpy import QtGui
 from qtpy import QtWidgets
 from qtpy.QtWidgets import QLabel, QListWidgetItem
 from keyboard import press
+from qtpy.QtGui import QFontDatabase
 # from win32api import GetSystemMetrics
 
 from labelme import __appname__
@@ -51,6 +52,7 @@ from labelme.widgets import CustomLabelListWidget
 from labelme.widgets import topToolWidget
 from labelme.widgets.pwdDlg import PwdDLG
 from labelme.widgets import labelme2coco
+from labelme.utils import appFont
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -113,10 +115,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle(__appname__)
 
-        self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-        if self._font:
-            self.setFont(self._font)
+        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
+        QFontDatabase.applicationFontFamilies(fontid)
 
+        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
+        if fontid > -1:
+            self.setFont(self._font)
+        else:
+            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+            self.setFont(self._font)
 
         # Whether we need to save or not.
         self.dirty = False
@@ -139,6 +146,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.selected_grade = None
         self.grades_dock = self.grades_widget = None
         self.grades_dock = QtWidgets.QDockWidget(self.tr("Grades"), self)
+        self.grades_dock.setFont(self._font)
         self.grades_dock.setObjectName("grades")
         self.grade_title_bar = DockInPutTitleBar(self.grades_dock, "gradesbar", self)
         self.grades_dock.setTitleBarWidget(self.grade_title_bar)
@@ -152,6 +160,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.selected_product = None
         self.products_dock = self.products_widget = None
         self.products_dock = QtWidgets.QDockWidget(self.tr("Products"), self)
+        self.products_dock.setFont(self._font)
         self.products_dock.setObjectName("products")
         self.products_title_bar = DockInPutTitleBar(self.products_dock, "productsbar", self)
         self.products_dock.setTitleBarWidget(self.products_title_bar)
@@ -177,6 +186,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr("Polygon Labels"), self
 
         )
+        self.shape_dock.setFont(self._font)
         self.shape_dock.setObjectName("Labels")
         self.customLabelTitleBar = DockCheckBoxTitleBar(self, self.shape_dock)
         self.shape_dock.setTitleBarWidget(self.customLabelTitleBar)
@@ -186,6 +196,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.selected_shapType = None
         self.topToolWidget = topToolWidget("toptool", self)
         self.topToolbar_dock = QtWidgets.QDockWidget(self.tr("Top bar"), self)
+        self.topToolbar_dock.setFont(self._font)
         self.topToolbar_dock.setWidget(self.topToolWidget)
         self.topToolbar_dock.setTitleBarWidget(QtWidgets.QWidget())
         self.topToolWidget.setEnabled(True)
@@ -193,6 +204,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.fileSearch = QtWidgets.QLineEdit()
         self.fileSearch.setPlaceholderText(self.tr("Search Filename"))
+        self.fileSearch.setFont(self._font)
         self.fileSearch.textChanged.connect(self.fileSearchChanged)
         self.fileListWidget = QtWidgets.QListWidget()
         self.fileListWidget.itemSelectionChanged.connect(
@@ -204,6 +216,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileListLayout.addWidget(self.fileSearch)
         fileListLayout.addWidget(self.fileListWidget)
         self.file_dock = QtWidgets.QDockWidget(self.tr("File List"), self)
+        self.file_dock.setFont(self._font)
         self.file_dock.setObjectName("Files")
         fileListWidget = QtWidgets.QWidget()
         fileListWidget.setLayout(fileListLayout)
@@ -529,6 +542,7 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         )
         self.zoomWidget.setEnabled(False)
+        self.zoomWidget.setFont(self._font)
 
         zoomIn = action(
             self.tr("Zoom &In"),
@@ -793,6 +807,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         self.tools = self.toolbar("Tools")
+        self.tools.setFont(self._font)
         # Menu buttons on Left
         self.actions.tool = (
             open_,
@@ -819,6 +834,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.toptools = self.toptoolbar("Top")
         # Menu buttons on Left
         self.statusBar().showMessage(str(self.tr("%s started.")) % __appname__)
+        self.statusBar().setFont(self._font)
         self.statusBar().show()
 
         if output_file is not None and self._config["auto_save"]:
@@ -909,12 +925,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def menu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
+        menu.setFont(self._font)
         if actions:
             utils.addActions(menu, actions)
         return menu
 
     def toolbar(self, title, actions=None):
         toolbar = ToolBar(title)
+        toolbar.setFont(self._font)
         toolbar.setObjectName("%sToolBar" % title)
         # toolbar.setOrientation(Qt.Vertical)
         toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
@@ -926,6 +944,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # add ckd
     def toptoolbar(self, title, actions=None):
         toolbar = ToolBar(title)
+        toolbar.setFont(self._font)
         toolbar.setObjectName("%sToolBar" % title)
         # toolbar.setOrientation(Qt.Vertical)
         toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
@@ -1012,7 +1031,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(message, delay)
 
     def resetState(self):
-        #self.labelList.clearlistLayout()
         self.labelList.clear()  # this block now when polygon list is deleted
         # update polygon count ckd
         prodT = "Polygon Labels (Total %s)"
@@ -1029,17 +1047,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # delete simply
     def resetSimplyState(self):
-        self.labelList.clearlistLayout()
         self.labelList.clear()  # this block now when polygon list is deleted
         # update polygon count ckd
         prodT = "Polygon Labels (Total %s)"
         if self._config["local_lang"] == "ko_KR":
             prodT = "다각형 레이블 (총 %s)"
-        self.shape_dock.titleBarWidget().titleLabel.setText(prodT % self.labelList.getCountItems())
+        self.shape_dock.titleBarWidget().titleLabel.setText(prodT % self.labelList.count())
         self.labelFile = None
         self.otherData = None
         self.canvas.shapes = []
+        self.canvas.shapesBackups = []
+        self.canvas.restoreCursor()
         self.canvas.update()
+        self.actions.deleteFile.setEnabled(False)
+        self.setDirty()
+        if self.noShapes():
+            for action in self.actions.onShapesPresent:
+                action.setEnabled(False)
 
     def currentItem(self):
         items = self.labelList.selectedItems()
@@ -1396,8 +1420,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             # item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
             self.products_widget.addItem(item)
-        lang = self._config["local_lang"]
-        if lang == "ko_KR":
+        if self._config["local_lang"] == "ko_KR":
             self.products_title_bar.titleLabel.setText("대표 품목 (총 %s)" % self.products_widget.__len__())
         else:
             self.products_title_bar.titleLabel.setText("Products (Total %s)" % self.products_widget.__len__())
@@ -1406,7 +1429,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def addProduct(self, new_str):
         item = QtWidgets.QListWidgetItem(new_str)
         self.products_widget.insertItem(0, item)
-        if lang == "ko_KR":
+        if self._config["local_lang"] == "ko_KR":
             self.products_title_bar.titleLabel.setText("대표 품목 (총 %s)" % self.products_widget.__len__())
         else:
             self.products_title_bar.titleLabel.setText("Products (Total %s)" % self.products_widget.__len__())
@@ -2092,8 +2115,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 os.remove(cocofp)
 
             item = self.fileListWidget.currentItem()
-            item.setCheckState(Qt.Unchecked)
-            # self.resetState()
+            if item:
+                item.setCheckState(Qt.Unchecked)
+            #self.resetState()
             self.resetSimplyState()  # add ckd
 
     # Message Dialogs.
@@ -2364,22 +2388,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 # print("labels is ", items)
                 if len(items):
                     self._polyonList.clear()
-                    """
-                    {
-                        "label_display": "경량A-C형강",
-                        "label": "C형강",
-                        "grade": "경량A",
-                        "color": "Maroon"
-                    }
-                     for i in range(len(items)):
-                        tcnt = i + 1
-                        if tcnt < 10000:
-                            idx = "%04d" % tcnt
-                        else:
-                            idx = "%08d" % tcnt
-                        item = items[i]
-                        nitem = {"id": "{}".format(idx), "label": item["label"], "color": item["color"]}
-                    """
                     self._polyonList = items
             else:
                 return QtWidgets.QMessageBox.critical(

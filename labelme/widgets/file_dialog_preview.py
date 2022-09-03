@@ -1,5 +1,6 @@
 from qtpy import QtCore
 from qtpy import QtGui
+from qtpy.QtGui import QFontDatabase
 from qtpy import QtWidgets
 
 import json

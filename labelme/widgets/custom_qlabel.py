@@ -7,7 +7,7 @@ class CQLabel(QLabel):
     def __init__(self, txt, parent):
         super(CQLabel, self).__init__()
         self.setText(txt)
-        self.setContentsMargins(3, 3, 3, 3)
+        self.setContentsMargins(1, 1, 1, 1)
         self._parent = parent
 
     def mouseReleaseEvent(self, ev: QtGui.QMouseEvent):

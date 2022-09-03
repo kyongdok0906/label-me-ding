@@ -16,6 +16,7 @@ from labelme.widgets.processini import AppInfoFile
 from labelme.widgets.processini import ProcessINI
 from labelme.widgets.loginDlg import LoginDLG
 from labelme.utils import newLang
+from labelme.utils import appFont
 
 
 def main():

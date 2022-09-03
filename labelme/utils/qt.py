@@ -16,6 +16,10 @@ def newLang(lang: str):
     trans_dir = osp.join(here, "../translate")
     return osp.join(":/", trans_dir, "%s.qm" % lang)
 
+def appFont(font: str):
+    font_dir = osp.join(here, "../font")
+    return osp.join(":/", font_dir, "%s.ttf" % font)
+
 
 def newIcon(icon):
     icons_dir = osp.join(here, "../icons")

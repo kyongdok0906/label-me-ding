@@ -13,6 +13,7 @@ from labelme.logger import logger
 from labelme.utils import newIcon
 
 from labelme.utils import newLang
+from labelme.utils import appFont
 
 
 def main():

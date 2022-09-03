@@ -3,8 +3,10 @@ import threading
 from PyQt5.QtWidgets import QDesktopWidget, QWidget
 from qtpy import QtWidgets
 from qtpy import QtGui, QtCore
+from qtpy.QtGui import QFontDatabase
 from labelme.utils.qt import httpReq
 from labelme.utils import newIcon
+from labelme.utils import appFont
 
 
 class PwdDLG(QtWidgets.QDialog):
@@ -18,9 +20,17 @@ class PwdDLG(QtWidgets.QDialog):
         self._config = config
         self._app = parent
         self._sms = False
-        self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-        if self._font:
+
+        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
+        QFontDatabase.applicationFontFamilies(fontid)
+
+        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
+        if fontid > -1:
             self.setFont(self._font)
+        else:
+            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+            self.setFont(self._font)
+
         self.initUI()
 
     def initUI(self):
@@ -52,7 +62,9 @@ class PwdDLG(QtWidgets.QDialog):
         v_mainlayout.addLayout(btn_layout)
 
         lb_name = QtWidgets.QLabel(self.tr('Name'))
+        lb_name.setFont(self._font)
         self._name_edit = QtWidgets.QLineEdit()
+        self._name_edit.setFont(self._font)
         self._name_edit.setFixedWidth(200)
         self._name_edit.setFixedHeight(25)
         self._name_edit.setStyleSheet("QWidget {border: 1px solid #aaa; border-radius: 5px; padding: 2px 6px}")
@@ -61,7 +73,9 @@ class PwdDLG(QtWidgets.QDialog):
         #id_layout.setSpacing(10)
 
         lb_pwd = QtWidgets.QLabel(self.tr('Current pasword'))
+        lb_pwd.setFont(self._font)
         self._lb_pwd_edit = QtWidgets.QLineEdit()
+        self._lb_pwd_edit.setFont(self._font)
         self._lb_pwd_edit.setEchoMode(QtWidgets.QLineEdit.Password)
         self._lb_pwd_edit.setFixedWidth(200)
         self._lb_pwd_edit.setFixedHeight(25)
@@ -71,7 +85,9 @@ class PwdDLG(QtWidgets.QDialog):
         pwd_layout.setContentsMargins(0, 5, 0, 0)
 
         lb_newpwd = QtWidgets.QLabel(self.tr('New pasword'))
+        lb_newpwd.setFont(self._font)
         self._newpwd_edit = QtWidgets.QLineEdit()
+        self._newpwd_edit.setFont(self._font)
         self._newpwd_edit.setEchoMode(QtWidgets.QLineEdit.Password)
         self._newpwd_edit.setFixedWidth(200)
         self._newpwd_edit.setFixedHeight(25)
@@ -81,7 +97,9 @@ class PwdDLG(QtWidgets.QDialog):
         new_layout.setContentsMargins(0, 5, 0, 0)
 
         lb_verify = QtWidgets.QLabel(self.tr('verify pasword'))
+        lb_verify.setFont(self._font)
         self._verify_edit = QtWidgets.QLineEdit()
+        self._verify_edit.setFont(self._font)
         self._verify_edit.setEchoMode(QtWidgets.QLineEdit.Password)
         self._verify_edit.setFixedWidth(200)
         self._verify_edit.setFixedHeight(25)
@@ -91,6 +109,7 @@ class PwdDLG(QtWidgets.QDialog):
         verify_layout.setContentsMargins(0, 5, 0, 0)
 
         self._lb_alram = QtWidgets.QLabel('')
+        self._lb_alram.setFont(self._font)
         self._lb_alram.setStyleSheet("QLabel { color : red; }")
         self._lb_alram.setFixedHeight(18)
         alram_layout.addWidget(self._lb_alram)

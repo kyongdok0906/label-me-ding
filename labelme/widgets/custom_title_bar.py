@@ -1,10 +1,12 @@
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtCore import QEvent, Qt
+from qtpy.QtGui import QFontDatabase
 from qtpy.QtWidgets import QGridLayout, QHBoxLayout, \
     QLabel, QLineEdit, QToolButton, QDockWidget, QStyle, QApplication, QCheckBox
 from keyboard import press
 from labelme.widgets.signal import Signal
 from .. import utils
+from labelme.utils import appFont
 
 
 class DockInPutTitleBar(QtWidgets.QWidget):
@@ -14,11 +16,21 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         self._app = app
         self._dockWidget = dockWidget
 
+        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
+        QFontDatabase.applicationFontFamilies(fontid)
+        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
+        if fontid > -1:
+            self.setFont(self._font)
+        else:
+            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+            self.setFont(self._font)
+
         boxLayout = QHBoxLayout(self)
         boxLayout.setSpacing(1)
         boxLayout.setContentsMargins(1, 1, 1, 1)
 
         self.titleLabel = QLabel(self)
+        self.titleLabel.setFont(self._font)
         lang = self._app._config["local_lang"]
         if self._bartype == "gradesbar":
             if lang == "ko_KR":
@@ -44,6 +56,8 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         if self._bartype == "gradesbar" and self._app._config["grade_yn"] == "Y":
             self.newLabel = QLabel(ninput)
             self.titleEdit = QLineEdit(self)
+            self.newLabel.setFont(self._font)
+            self.titleEdit.setFont(self._font)
             # self.titleEdit.hide()
             #self.titleEdit.editingFinished.connect(self.finishEdit)
             self.titleEdit.returnPressed.connect(self.returnPresshandle)
@@ -51,6 +65,8 @@ class DockInPutTitleBar(QtWidgets.QWidget):
         elif self._bartype == "productsbar" and self._app._config["product_yn"] == "Y":
             self.newLabel = QLabel(ninput)
             self.titleEdit = QLineEdit(self)
+            self.newLabel.setFont(self._font)
+            self.titleEdit.setFont(self._font)
             # self.titleEdit.hide()
             #self.titleEdit.editingFinished.connect(self.finishEdit)
             self.titleEdit.returnPressed.connect(self.returnPresshandle)
@@ -191,6 +207,14 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
     def __init__(self, app, dockWidget):
         super(DockCheckBoxTitleBar, self).__init__(dockWidget)
         self._app = app
+        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
+        QFontDatabase.applicationFontFamilies(fontid)
+        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
+        if fontid > -1:
+            self.setFont(self._font)
+        else:
+            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+            self.setFont(self._font)
         #self.signal = Signal()
         #self.signal.polygon_check_signal.connect(self.polygon_label_status)
         boxLayout = QHBoxLayout(self)
@@ -202,6 +226,8 @@ class DockCheckBoxTitleBar(QtWidgets.QWidget):
         if self._app._config["local_lang"] == "ko_KR":
             polyT = "다각형 레이블 (총 %s)"
         self.titleLabel.setText(polyT % 0)
+
+        self.titleLabel.setFont(self._font)
 
         self.hidnBtn = QtWidgets.QPushButton(self)
         self.hidnBtn.setText('')

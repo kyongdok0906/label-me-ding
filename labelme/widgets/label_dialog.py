@@ -5,10 +5,12 @@ from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy import QtWidgets
+from qtpy.QtGui import QFontDatabase
 
 from labelme.logger import logger
 import labelme.utils
 from labelme.shape import Shape
+from labelme.utils import appFont
 
 QT5 = QT_VERSION[0] == "5"
 
@@ -247,7 +249,7 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
     _selected = False
 
     def __init__(self, shape, parent=None):
-
+        super(DlgRowWidgetItem, self).__init__()
         if isinstance(shape, Shape):
             sp = {"grade": shape.grade, "label": shape.label, "label_display": shape.label_display, "color": shape.color}
         else:
@@ -256,7 +258,16 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         self._shape = sp
         self._parent = parent
 
-        super(DlgRowWidgetItem, self).__init__()
+        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
+        QFontDatabase.applicationFontFamilies(fontid)
+        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
+        if fontid > -1:
+            self.setFont(self._font)
+        else:
+            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+            self.setFont(self._font)
+
+
         horizontal_layout = QtWidgets.QHBoxLayout(self)
         horizontal_layout.setSpacing(1)
         horizontal_layout.setContentsMargins(0, 0, 0, 0)
@@ -265,6 +276,7 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         txt = self._shape["label"]
 
         label.setText(txt)
+        label.setFont(self._font)
         #label.setStyleSheet("QWidget { font-size: 12px; }")
 
         color_label = QtWidgets.QLabel(self)
@@ -328,6 +340,15 @@ class SearchLabelListWidget(QtWidgets.QWidget):
         self._selected_item = None
         self._itemList = []
         self._parent = parent
+
+        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
+        QFontDatabase.applicationFontFamilies(fontid)
+        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
+        if fontid > -1:
+            self.setFont(self._font)
+        else:
+            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+            self.setFont(self._font)
 
         self.vContent_layout = QtWidgets.QVBoxLayout(self)
         self.vContent_layout.setContentsMargins(0, 5, 0, 5)
@@ -437,6 +458,15 @@ class LabelSearchDialog(QtWidgets.QDialog):
         self._app = parent  # add ckd
         self._list_items = []
 
+        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
+        QFontDatabase.applicationFontFamilies(fontid)
+        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
+        if fontid > -1:
+            self.setFont(self._font)
+        else:
+            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
+            self.setFont(self._font)
+
         self.edit = LabelQLineEdit()
         self.edit.setPlaceholderText(text)
         self.edit.returnPressed.connect(self.searchProcess)
@@ -460,25 +490,10 @@ class LabelSearchDialog(QtWidgets.QDialog):
 
         # label_list
         self.labelList = SearchLabelListWidget(self)
-        """
-         if self._fit_to_content["row"]:
-            self.labelList.setHorizontalScrollBarPolicy(
-                QtCore.Qt.ScrollBarAlwaysOff
-            )
-        if self._fit_to_content["column"]:
-            self.labelList.setVerticalScrollBarPolicy(
-                QtCore.Qt.ScrollBarAlwaysOff
-            )
-        """
         # self.labelList.itemSelectionChanged.connect(self.labelItemSelected)
 
         self.edit.setListWidget(self.labelList)
         layout.addWidget(self.labelList)
-        # label_flags
-        """
-        self.flagsLayout = QtWidgets.QVBoxLayout()
-        layout.addItem(self.flagsLayout)
-        """
         self.setLayout(layout)
 
     def labelItemSelected(self, shape, mode=None):

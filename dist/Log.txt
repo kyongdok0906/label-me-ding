@@ -1,8 +1,0 @@
-[2022.08.16/11:26:05] - labelme ini created that is not exist
-[2022.08.16/11:26:15] - log lang is null
-[2022.08.16/11:33:55] - exist labelme ini
-[2022.08.16/11:34:04] - log lang is null
-[2022.08.24/00:15:16] - exist labelme ini
-[2022.08.24/13:10:04] - exist labelme ini
-[2022.08.24/13:10:34] - exist labelme ini
-[2022.08.24/13:10:56] - exist labelme ini

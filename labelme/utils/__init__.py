@@ -30,3 +30,4 @@ from .qt import fmtShortcut
 # add by me newly
 from .qt import newLang
 from .qt import httpReq
+from .qt import appFont
