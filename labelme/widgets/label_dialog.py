@@ -5,7 +5,6 @@ from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy import QtWidgets
-from qtpy.QtGui import QFontDatabase
 
 from labelme.logger import logger
 import labelme.utils
@@ -29,7 +28,6 @@ class LabelQLineEdit(QtWidgets.QLineEdit):
         else:
             super(LabelQLineEdit, self).keyPressEvent(e)
     """
-
 
 """
 class LabelDialog(QtWidgets.QDialog):
@@ -243,7 +241,6 @@ class LabelDialog(QtWidgets.QDialog):
             return None, None, None
 """
 
-
 class DlgRowWidgetItem(QtWidgets.QWidget):
     _shape = {}
     _selected = False
@@ -258,16 +255,6 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         self._shape = sp
         self._parent = parent
 
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        QFontDatabase.applicationFontFamilies(fontid)
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        if fontid > -1:
-            self.setFont(self._font)
-        else:
-            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-            self.setFont(self._font)
-
-
         horizontal_layout = QtWidgets.QHBoxLayout(self)
         horizontal_layout.setSpacing(1)
         horizontal_layout.setContentsMargins(0, 0, 0, 0)
@@ -276,14 +263,14 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         txt = self._shape["label"]
 
         label.setText(txt)
-        label.setFont(self._font)
-        #label.setStyleSheet("QWidget { font-size: 12px; }")
+        label.setFont(appFont())
+        label.setStyleSheet("QLabel { padding: 2px; }")
 
         color_label = QtWidgets.QLabel(self)
         color_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "cyan"
 
         color_label.setText("")
-        color_label.setStyleSheet("QLabel{border: 1px soild #aaa; border-radius: 7px; background: %s;}" % color_txt)
+        color_label.setStyleSheet("QLabel{border: 1px soild #aaa; background: %s;}" % color_txt)
         color_label.setFixedWidth(8)
 
         #self.check_box = QtWidgets.QCheckBox(self)
@@ -291,14 +278,11 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
 
         horizontal_layout.addSpacing(6)
         horizontal_layout.addWidget(label, 0, QtCore.Qt.AlignLeft)
-        horizontal_layout.addSpacing(6)
-        horizontal_layout.addWidget(color_label, 0, QtCore.Qt.AlignLeft)
         horizontal_layout.addStretch()
-        #horizontal_layout.addWidget(self.check_box, 0, QtCore.Qt.AlignRight)
-        horizontal_layout.addSpacing(40)
+        horizontal_layout.addWidget(color_label, 0, QtCore.Qt.AlignRight)
+        horizontal_layout.addSpacing(20)
         self.setLayout(horizontal_layout)
-        self.setStyleSheet("QWidget { background-color: rgb(255, 255, 255); border: 0; font-size: 12px}")
-
+        self.setStyleSheet("QWidget { background-color: rgb(255, 255, 255); border: 0;}")
         self.setAutoFillBackground(True)
 
     def mousePressEvent(self, event):
@@ -312,9 +296,9 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
 
     def changeBackground(self, state):
         if state is True:
-            self.setStyleSheet("QWidget { background-color: rgb(204, 232, 255); border: 0; font-size: 12px}")
+            self.setStyleSheet("QWidget { background-color: rgb(204, 232, 255); border: 0;}")
         else:
-            self.setStyleSheet("QWidget { background-color: rgb(255, 255, 255); border: 0; font-size: 12px}")
+            self.setStyleSheet("QWidget { background-color: rgb(255, 255, 255); border: 0;}")
         self.setAutoFillBackground(True)
 
     def checkitem(self, flag):
@@ -341,15 +325,6 @@ class SearchLabelListWidget(QtWidgets.QWidget):
         self._itemList = []
         self._parent = parent
 
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        QFontDatabase.applicationFontFamilies(fontid)
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        if fontid > -1:
-            self.setFont(self._font)
-        else:
-            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-            self.setFont(self._font)
-
         self.vContent_layout = QtWidgets.QVBoxLayout(self)
         self.vContent_layout.setContentsMargins(0, 5, 0, 5)
         self.vContent_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -370,7 +345,6 @@ class SearchLabelListWidget(QtWidgets.QWidget):
         hb_layout.setContentsMargins(0, 0, 0, 0)
         hb_layout.setSpacing(0)
         self.setLayout(hb_layout)
-        self.setMaximumHeight(300)
 
     def addItems(self, items):
         if len(items) < 1:
@@ -458,16 +432,9 @@ class LabelSearchDialog(QtWidgets.QDialog):
         self._app = parent  # add ckd
         self._list_items = []
 
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        QFontDatabase.applicationFontFamilies(fontid)
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        if fontid > -1:
-            self.setFont(self._font)
-        else:
-            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-            self.setFont(self._font)
-
         self.edit = LabelQLineEdit()
+
+        self.setFont(appFont())
         self.edit.setPlaceholderText(text)
         self.edit.returnPressed.connect(self.searchProcess)
         layout = QtWidgets.QVBoxLayout()
@@ -494,6 +461,9 @@ class LabelSearchDialog(QtWidgets.QDialog):
 
         self.edit.setListWidget(self.labelList)
         layout.addWidget(self.labelList)
+
+        self.setMaximumWidth(350)
+        self.setMaximumHeight(350)
         self.setLayout(layout)
 
     def labelItemSelected(self, shape, mode=None):
@@ -502,7 +472,7 @@ class LabelSearchDialog(QtWidgets.QDialog):
             return
         try:
             txt = shape["label"]
-        except:
+        except AttributeError:
             txt = ""
 
         if txt is not None and txt != "":

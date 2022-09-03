@@ -1,6 +1,6 @@
 import threading
 from qtpy import QtCore, QtWidgets, QtGui
-from qtpy.QtGui import QColor, QColorConstants, QFontDatabase
+from qtpy.QtGui import QColor, QColorConstants
 from qtpy.QtCore import Qt
 
 from qtpy.QtWidgets import QLayout, QHBoxLayout, QVBoxLayout, \
@@ -21,16 +21,8 @@ class CustomListWidget(QtWidgets.QWidget):
         self._objtag = objtag
         self._items = []
         self._status = False
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        QFontDatabase.applicationFontFamilies(fontid)
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        # if fontid > -1:
-        #     self.setFont(self._font)
-        # else:
-        #     self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-        #     self.setFont(self._font)
-
         super(CustomListWidget, self).__init__()
+        #self.setFont(appFont())
 
         self.initUI()
 
@@ -106,7 +98,7 @@ class CustomListWidget(QtWidgets.QWidget):
                         if item is not None:
                             qlb = CQLabel(item["grade"], self)
                             qlb.setStyleSheet("QLabel { border: 0px solid #aaa; padding:2px}")
-                            qlb.setFont(self._font)
+                            qlb.setFont(appFont())
                             vbox.addWidget(qlb)
                             vbox.sizeHint()
                             self.items_list.append(qlb)
@@ -190,15 +182,6 @@ class MyCustomWidget(QtWidgets.QWidget):
         super(MyCustomWidget, self).__init__(parent)
         self._parent = parent
 
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        QFontDatabase.applicationFontFamilies(fontid)
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        if fontid > -1:
-            self.setFont(self._font)
-        else:
-            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-            self.setFont(self._font)
-
         if isinstance(shape, Shape):
             self._shape = shape
         else:
@@ -227,7 +210,7 @@ class MyCustomWidget(QtWidgets.QWidget):
 
         self._id = idx
         self.label = QtWidgets.QLabel("#{}  {}".format(self._id, self._shape.label_display))
-        self.label.setFont(self._font)
+        self.label.setFont(appFont())
 
         color_txt = self._shape.color
         if not color_txt or "" == color_txt:
@@ -278,15 +261,6 @@ class CustomLabelListWidget(QtWidgets.QListWidget):
         self._app = app
         self._selected_item = []
         self._itemList = []
-
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        QFontDatabase.applicationFontFamilies(fontid)
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        if fontid > -1:
-            self.setFont(self._font)
-        else:
-            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-            self.setFont(self._font)
 
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
@@ -408,21 +382,10 @@ class topToolWidget(QtWidgets.QWidget):
         self.setContentsMargins(0, 0, 0, 0)
         # self.setFixedWidth(500)
         self._app = app
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        QFontDatabase.applicationFontFamilies(fontid)
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        if fontid > -1:
-            self.setFont(self._font)
-        else:
-            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-            self.setFont(self._font)
+        self.setFont(appFont())
 
         # setting UI
-
         self.initUI()
-
-        if self._app._font:
-            self.setFont(self._app._font)
 
     def initUI(self):
         hbox_layout = QHBoxLayout()

@@ -3,7 +3,6 @@ import threading
 from PyQt5.QtWidgets import QDesktopWidget, QWidget
 from qtpy import QtWidgets
 from qtpy import QtGui, QtCore
-from qtpy.QtGui import QFontDatabase
 from labelme.utils.qt import httpReq
 from labelme.utils import newIcon
 from labelme.utils import appFont
@@ -16,17 +15,6 @@ class LoginDLG(QWidget):
             config=None
     ):
         super().__init__()
-
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        ffamile = QFontDatabase.applicationFontFamilies(fontid)
-
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        if fontid > -1:
-            self.setFont(self._font)
-        else:
-            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-            self.setFont(self._font)
-
         self._config = config
         self.initUI()
 
@@ -36,6 +24,7 @@ class LoginDLG(QWidget):
         v_mainlayout.setSpacing(10)
         self.setLayout(v_mainlayout)
         self.setWindowTitle(self.tr('User Login'))
+        self.setFont(appFont())
         # self.setGeometry(300, 300, 200, 150)
         #self.resize(400, 300)
         self.setFixedSize(400, 300)
@@ -73,7 +62,7 @@ class LoginDLG(QWidget):
         bv_control_layout.addLayout(btn_layout)
 
         lb_id = QtWidgets.QLabel(self.tr('ID *'))
-        lb_id.setFont(self._font)
+
         self._lb_id_edit = QtWidgets.QLineEdit()
         self._lb_id_edit.setFixedWidth(200)
         self._lb_id_edit.setFixedHeight(25)
@@ -83,7 +72,7 @@ class LoginDLG(QWidget):
         #id_layout.setSpacing(10)
 
         lb_pwd = QtWidgets.QLabel(self.tr('PWD *'))
-        lb_pwd.setFont(self._font)
+
         self._lb_pwd_edit = QtWidgets.QLineEdit()
         self._lb_pwd_edit.setEchoMode(QtWidgets.QLineEdit.Password)
         self._lb_pwd_edit.setFixedWidth(200)
@@ -100,10 +89,7 @@ class LoginDLG(QWidget):
         self._cb.setFixedWidth(200)
         self._cb.setFixedHeight(25)
         self._cb.setStyleSheet("QWidget {border: 1px solid #aaa; border-radius: 2px; padding: 2px 6px}")
-        self._cb.setFont(self._font)
-        # cb.addItem('Chinese', 'zh_CN')
-        #cb.setFixedWidth(100)
-        # cb.activated[str].connect(self.onActivated)
+
         lang_layout.addWidget(lb_lang)
         lang_layout.addWidget(self._cb)
         lang_layout.setContentsMargins(0, 5, 0, 0)
@@ -121,11 +107,11 @@ class LoginDLG(QWidget):
         self._lb_alram = QtWidgets.QLabel('')
         self._lb_alram.setStyleSheet("QLabel { color : red; }")
         self._lb_alram.setFixedHeight(18)
-        self._lb_alram.setFont(self._font)
+
         alram_layout.addWidget(self._lb_alram)
 
         btn_login = QtWidgets.QPushButton(self.tr('Login'))
-        btn_login.setFont(self._font)
+        btn_login.setFont(appFont())
         btn_login.setFixedWidth(150)
         btn_login.setFixedHeight(30)
         btn_login.setStyleSheet("QWidget {border: 1px solid #aaa; border-radius: 5px; padding: 2px 3px; color:white;background-color: #043966; font-size: 13px}")

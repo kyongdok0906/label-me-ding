@@ -7,18 +7,26 @@ import requests, json
 from qtpy import QtCore
 from qtpy import QtGui
 from qtpy import QtWidgets
+from qtpy.QtGui import QFontDatabase
 
 
 here = osp.dirname(osp.abspath(__file__))
-
+font_dir = osp.join(here, "../font")
 
 def newLang(lang: str):
     trans_dir = osp.join(here, "../translate")
     return osp.join(":/", trans_dir, "%s.qm" % lang)
 
-def appFont(font: str):
-    font_dir = osp.join(here, "../font")
-    return osp.join(":/", font_dir, "%s.ttf" % font)
+def appFont(fontname: str = None):
+    if fontname is not None:
+        fontid = QFontDatabase.addApplicationFont(osp.join(":/", font_dir, "%s.ttf" % fontname))
+    else:
+        fontid = QFontDatabase.addApplicationFont(osp.join(":/", font_dir, "NanumGothic - Regular.ttf"))
+    ffamile = QFontDatabase.applicationFontFamilies(fontid)
+    if fontid > -1:
+        return QtGui.QFont(ffamile[0], 10, QtGui.QFont.Normal)
+    else:
+        return QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
 
 
 def newIcon(icon):

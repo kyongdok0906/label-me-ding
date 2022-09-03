@@ -19,7 +19,7 @@ from qtpy import QtGui
 from qtpy import QtWidgets
 from qtpy.QtWidgets import QLabel, QListWidgetItem
 from keyboard import press
-from qtpy.QtGui import QFontDatabase
+
 # from win32api import GetSystemMetrics
 
 from labelme import __appname__
@@ -114,26 +114,14 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__()
 
         self.setWindowTitle(__appname__)
-
-        fontid = QFontDatabase.addApplicationFont(appFont("NanumGothic-Regular"))
-        QFontDatabase.applicationFontFamilies(fontid)
-
-        self._font = QtGui.QFont("NanumGothic", 10, QtGui.QFont.Normal)
-        if fontid > -1:
-            self.setFont(self._font)
-        else:
-            self._font = QtGui.QFont("맑은 고딕", 10, QtGui.QFont.Normal)
-            self.setFont(self._font)
+        self.setFont(appFont())
 
         # Whether we need to save or not.
         self.dirty = False
-
         self._noSelectionSlot = False
-
         self._copied_shapes = None
 
         # Main widgets and related state.
-
         self.labelDialog = LabelSearchDialog(
             text=self.tr("Enter Label for searching"),
             parent=self,
@@ -146,7 +134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.selected_grade = None
         self.grades_dock = self.grades_widget = None
         self.grades_dock = QtWidgets.QDockWidget(self.tr("Grades"), self)
-        self.grades_dock.setFont(self._font)
+
         self.grades_dock.setObjectName("grades")
         self.grade_title_bar = DockInPutTitleBar(self.grades_dock, "gradesbar", self)
         self.grades_dock.setTitleBarWidget(self.grade_title_bar)
@@ -160,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.selected_product = None
         self.products_dock = self.products_widget = None
         self.products_dock = QtWidgets.QDockWidget(self.tr("Products"), self)
-        self.products_dock.setFont(self._font)
+
         self.products_dock.setObjectName("products")
         self.products_title_bar = DockInPutTitleBar(self.products_dock, "productsbar", self)
         self.products_dock.setTitleBarWidget(self.products_title_bar)
@@ -186,7 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr("Polygon Labels"), self
 
         )
-        self.shape_dock.setFont(self._font)
+
         self.shape_dock.setObjectName("Labels")
         self.customLabelTitleBar = DockCheckBoxTitleBar(self, self.shape_dock)
         self.shape_dock.setTitleBarWidget(self.customLabelTitleBar)
@@ -196,7 +184,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.selected_shapType = None
         self.topToolWidget = topToolWidget("toptool", self)
         self.topToolbar_dock = QtWidgets.QDockWidget(self.tr("Top bar"), self)
-        self.topToolbar_dock.setFont(self._font)
         self.topToolbar_dock.setWidget(self.topToolWidget)
         self.topToolbar_dock.setTitleBarWidget(QtWidgets.QWidget())
         self.topToolWidget.setEnabled(True)
@@ -204,7 +191,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.fileSearch = QtWidgets.QLineEdit()
         self.fileSearch.setPlaceholderText(self.tr("Search Filename"))
-        self.fileSearch.setFont(self._font)
         self.fileSearch.textChanged.connect(self.fileSearchChanged)
         self.fileListWidget = QtWidgets.QListWidget()
         self.fileListWidget.itemSelectionChanged.connect(
@@ -215,8 +201,8 @@ class MainWindow(QtWidgets.QMainWindow):
         fileListLayout.setSpacing(0)
         fileListLayout.addWidget(self.fileSearch)
         fileListLayout.addWidget(self.fileListWidget)
+
         self.file_dock = QtWidgets.QDockWidget(self.tr("File List"), self)
-        self.file_dock.setFont(self._font)
         self.file_dock.setObjectName("Files")
         fileListWidget = QtWidgets.QWidget()
         fileListWidget.setLayout(fileListLayout)
@@ -542,7 +528,6 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         )
         self.zoomWidget.setEnabled(False)
-        self.zoomWidget.setFont(self._font)
 
         zoomIn = action(
             self.tr("Zoom &In"),
@@ -639,7 +624,6 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=True,
         )
         fill_drawing.trigger()
-        
 
         # Label list context menu.
         labelMenu = QtWidgets.QMenu()
@@ -807,7 +791,6 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         self.tools = self.toolbar("Tools")
-        self.tools.setFont(self._font)
         # Menu buttons on Left
         self.actions.tool = (
             open_,
@@ -834,7 +817,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.toptools = self.toptoolbar("Top")
         # Menu buttons on Left
         self.statusBar().showMessage(str(self.tr("%s started.")) % __appname__)
-        self.statusBar().setFont(self._font)
+        self.statusBar().setFont(appFont())
         self.statusBar().show()
 
         if output_file is not None and self._config["auto_save"]:
@@ -925,14 +908,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def menu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
-        menu.setFont(self._font)
+        menu.setFont(appFont())
         if actions:
             utils.addActions(menu, actions)
         return menu
 
     def toolbar(self, title, actions=None):
         toolbar = ToolBar(title)
-        toolbar.setFont(self._font)
+        toolbar.setFont(appFont())
         toolbar.setObjectName("%sToolBar" % title)
         # toolbar.setOrientation(Qt.Vertical)
         toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
@@ -944,7 +927,6 @@ class MainWindow(QtWidgets.QMainWindow):
     # add ckd
     def toptoolbar(self, title, actions=None):
         toolbar = ToolBar(title)
-        toolbar.setFont(self._font)
         toolbar.setObjectName("%sToolBar" % title)
         # toolbar.setOrientation(Qt.Vertical)
         toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
@@ -2369,8 +2351,8 @@ class MainWindow(QtWidgets.QMainWindow):
             jsstr = httpReq(url, "get", headers)
             if jsstr['message'] == 'success':
                 items = jsstr['items']
-                # print("products is ", items)
-                if len(items):
+                #print("products is ", items)
+                if items is not None:
                     self.loadProducts(items)
             else:
                 return QtWidgets.QMessageBox.critical(
@@ -2385,10 +2367,13 @@ class MainWindow(QtWidgets.QMainWindow):
             jsstr = httpReq(url, "get", headers)
             if jsstr['message'] == 'success':
                 items = jsstr['items']
-                # print("labels is ", items)
-                if len(items):
-                    self._polyonList.clear()
-                    self._polyonList = items
+                try:
+                    if self._polyonList is not None:
+                        self._polyonList.clear()
+                    if items and len(items) > 0:
+                        self._polyonList = items
+                except AttributeError:
+                    pass
             else:
                 return QtWidgets.QMessageBox.critical(
                     self, "Error", "<p><b>%s</b></p>%s" % ("Error", jsstr['message'])
@@ -2413,7 +2398,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if jsstr['message'] == 'success':
             items = jsstr['items']
             # print("All products is ", items)
-            if len(items):
+            if items is not None:
                 self.loadProducts(items)
         else:
             return QtWidgets.QMessageBox.critical(
