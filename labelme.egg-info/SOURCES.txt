@@ -20,6 +20,9 @@ labelme/cli/json_to_dataset.py
 labelme/cli/on_docker.py
 labelme/config/__init__.py
 labelme/config/default_config.yaml
+labelme/font/NanumGothic-Bold.ttf
+labelme/font/NanumGothic-ExtraBold.ttf
+labelme/font/NanumGothic-Regular.ttf
 labelme/icons/cancel.png
 labelme/icons/close.png
 labelme/icons/color-line.png

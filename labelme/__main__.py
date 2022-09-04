@@ -11,7 +11,6 @@ from labelme.app import MainWindow
 from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon
-
 from labelme.widgets.processini import AppInfoFile
 from labelme.widgets.processini import ProcessINI
 from labelme.widgets.loginDlg import LoginDLG
@@ -174,7 +173,8 @@ def main():
         else:
             output_dir = output
 
-    local_lang = config["local_lang"] if config["local_lang"] is not None else QtCore.QLocale.system().name()
+    local_lang = config["local_lang"] if config["local_lang"] is not None else QtCore.QLocale.system(
+    ).name()
     # start get lang of UI
     """
     labele_ini = os.getcwd() + '/labelme.ini'
