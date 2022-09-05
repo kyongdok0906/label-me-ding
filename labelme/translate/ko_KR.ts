@@ -420,7 +420,7 @@
     <message>
         <location filename="Work/Ding/labelme-work/labelme/labelme/app.py" line="478"/>
         <source>Undo</source>
-        <translation>실행 취조</translation>
+        <translation>실행 취소</translation>
     </message>
     <message>
         <location filename="Work/Ding/labelme-work/labelme/labelme/app.py" line="478"/>

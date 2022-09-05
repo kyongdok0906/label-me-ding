@@ -62,7 +62,7 @@ class CustomListWidget(QtWidgets.QWidget):
         if self._selected_item is not None and self._objtag == "grades":
             self._app.selected_grade = self._selected_item
             threading.Timer(0.1, self._app.receiveProductsFromServerByGrade).start()
-            threading.Timer(0.1, self._app.customLabelTitleBar.hidnBtn.clicked.emit).start()
+            threading.Timer(0.2, self._app.customLabelTitleBar.hidnBtn.clicked.emit).start()
             # self._app.queueEvent(self._app.receiveProductsFromServerByGrade)
             # self._app.queueEvent(self._app.customLabelTitleBar.hidnBtn.clicked.emit)
 

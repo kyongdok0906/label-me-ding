@@ -142,7 +142,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.grades_widget = CustomListWidget(self, "grades")
         self.grades_dock.setWidget(self.grades_widget)
         #if self._config["grades"]:
-        threading.Timer(0.1, self.gradeButtonEvent, args=(True,)).start()
+        threading.Timer(0.3, self.gradeButtonEvent, args=(True,)).start()
 
         # products part ckd
         self.selected_product = None
@@ -153,7 +153,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.products_title_bar = DockInPutTitleBar(self.products_dock, "productsbar", self)
         self.products_dock.setTitleBarWidget(self.products_title_bar)
 
-        self.products_widget = QtWidgets.QListWidget()
+        self.products_widget = QtWidgets.QListWidget(self)
         self.products_widget.setSpacing(3)
         self.products_widget.setContentsMargins(3, 6, 3, 3)
         self.products_dock.setWidget(self.products_widget)
@@ -614,16 +614,16 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=False,
         )
 
-        fill_drawing = action(
-            self.tr("Fill Drawing Polygon"),
-            self.canvas.setFillDrawing,
-            None,
-            "color",
-            self.tr("Fill polygon while drawing"),
-            checkable=True,
-            enabled=True,
-        )
-        fill_drawing.trigger()
+        # fill_drawing = action(
+        #     self.tr("Fill Drawing Polygon"),
+        #     self.canvas.setFillDrawing,
+        #     None,
+        #     "color",
+        #     self.tr("Fill polygon while drawing"),
+        #     checkable=True,
+        #     enabled=True,
+        # )
+        # fill_drawing.trigger()
 
         # Label list context menu.
         labelMenu = QtWidgets.QMenu()
@@ -755,16 +755,16 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(
             self.menus.view,
             (
+                # fill_drawing,
+                # None,
+                hideAll,
+                showAll,
+                None,
                 self.topToolbar_dock.toggleViewAction(),
                 self.grades_dock.toggleViewAction(),
                 self.products_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
-                None,
-                fill_drawing,
-                None,
-                hideAll,
-                showAll,
                 None,
                 zoomIn,
                 zoomOut,
@@ -800,11 +800,13 @@ class MainWindow(QtWidgets.QMainWindow):
             save,
             deleteFile,
             None,
-            createMode,
+            # createMode,
             editMode,
+            hideAll,
+            showAll,
             duplicate,
-            copy,
-            paste,
+            # copy,
+            # paste,
             delete,
             undo,
             brightnessContrast,
@@ -1399,6 +1401,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(len(items)):
             itm = items[i]
             item = QtWidgets.QListWidgetItem(itm["product"])
+            item.setFont(appFont())
             # item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             # item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
             self.products_widget.addItem(item)
@@ -1410,6 +1413,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def addProduct(self, new_str):
         item = QtWidgets.QListWidgetItem(new_str)
+        item.setFont(appFont())
         self.products_widget.insertItem(0, item)
         if self._config["local_lang"] == "ko_KR":
             self.products_title_bar.titleLabel.setText("대표 품목 (총 %s)" % self.products_widget.__len__())
