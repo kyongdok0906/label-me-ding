@@ -793,4 +793,17 @@ Polygons</source>
         <translation>암호가 성공적으로 변경되였습니다.</translation>
     </message>
 </context>
+<context>
+    <name>PolygonTransDialog</name>
+    <message>
+        <location filename="Work/Ding/labelme-work/labelme/labelme/widgets/polygon_trans_lialog.py" line="15"/>
+        <source>Transparency</source>
+        <translation>투명도</translation>
+    </message>
+    <message>
+        <location filename="Work/Ding/labelme-work/labelme/labelme/widgets/polygon_trans_lialog.py" line="19"/>
+        <source>Transparency</source>
+        <translation>투명도</translation>
+    </message>
+</context>
 </TS>

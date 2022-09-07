@@ -267,7 +267,12 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         label.setStyleSheet("QLabel { padding: 2px; }")
 
         color_label = QtWidgets.QLabel(self)
-        color_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "cyan"
+        c_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "cyan"
+        Qc = QtGui.QColor(c_txt)
+        r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
+        tmpcolor = QtGui.QColor(r, g, b)
+        color_txt = tmpcolor.name(QtGui.QColor.HexRgb)
+        #color_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "cyan"
 
         color_label.setText("")
         color_label.setStyleSheet("QLabel{border: 1px soild #aaa; background: %s;}" % color_txt)
@@ -280,7 +285,7 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         horizontal_layout.addWidget(label, 0, QtCore.Qt.AlignLeft)
         horizontal_layout.addStretch()
         horizontal_layout.addWidget(color_label, 0, QtCore.Qt.AlignRight)
-        horizontal_layout.addSpacing(20)
+        horizontal_layout.addSpacing(15)
         self.setLayout(horizontal_layout)
         self.setStyleSheet("QWidget { background-color: rgb(255, 255, 255); border: 0;}")
         self.setAutoFillBackground(True)
@@ -345,6 +350,10 @@ class SearchLabelListWidget(QtWidgets.QWidget):
         hb_layout.setContentsMargins(0, 0, 0, 0)
         hb_layout.setSpacing(0)
         self.setLayout(hb_layout)
+        self.setMinimumWidth(300)
+        self.setMinimumHeight(200)
+        # self.setMaximumWidth(350)
+        self.setMaximumHeight(250)
 
     def addItems(self, items):
         if len(items) < 1:
@@ -355,12 +364,16 @@ class SearchLabelListWidget(QtWidgets.QWidget):
             rowItem = DlgRowWidgetItem(item, self)
             self.vContent_layout.addWidget(rowItem)
             self._itemList.append(rowItem)
+            w = rowItem.width()
+            self.setMinimumWidth(w / 2 + 20)
 
     def addItem(self, item):
         if item:
             rowItem = DlgRowWidgetItem(item, self)
             self.vContent_layout.addWidget(rowItem)
             self._itemList.append(rowItem)
+            w = rowItem.width()
+            self.setMinimumWidth(w / 2 + 20)
 
     def findItems(self, shape):
         for it in self._itemList:
@@ -431,6 +444,7 @@ class LabelSearchDialog(QtWidgets.QDialog):
 
         self._app = parent  # add ckd
         self._list_items = []
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
         self.edit = LabelQLineEdit()
 
@@ -458,12 +472,9 @@ class LabelSearchDialog(QtWidgets.QDialog):
         # label_list
         self.labelList = SearchLabelListWidget(self)
         # self.labelList.itemSelectionChanged.connect(self.labelItemSelected)
-
         self.edit.setListWidget(self.labelList)
         layout.addWidget(self.labelList)
 
-        self.setMaximumWidth(350)
-        self.setMaximumHeight(350)
         self.setLayout(layout)
 
     def labelItemSelected(self, shape, mode=None):

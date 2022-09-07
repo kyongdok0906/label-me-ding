@@ -3,6 +3,7 @@ import threading
 from PyQt5.QtWidgets import QDesktopWidget, QWidget
 from qtpy import QtWidgets
 from qtpy import QtGui, QtCore
+from qtpy.QtCore import Qt
 from labelme.utils.qt import httpReq
 from labelme.utils import newIcon
 from labelme.utils import appFont
@@ -24,6 +25,8 @@ class LoginDLG(QWidget):
         v_mainlayout.setSpacing(10)
         self.setLayout(v_mainlayout)
         self.setWindowTitle(self.tr('User Login'))
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+
         self.setFont(appFont())
         # self.setGeometry(300, 300, 200, 150)
         #self.resize(400, 300)

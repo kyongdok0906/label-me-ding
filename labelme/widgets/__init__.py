@@ -2,6 +2,8 @@
 
 from .brightness_contrast_dialog import BrightnessContrastDialog
 
+from .polygon_trans_dialog import PolygonTransDialog
+
 from .canvas import Canvas
 
 from .color_dialog import ColorDialog

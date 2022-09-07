@@ -32,6 +32,7 @@ from labelme.label_file import LabelFileError
 from labelme.logger import logger
 from labelme.shape import Shape
 from labelme.widgets import BrightnessContrastDialog
+from labelme.widgets import PolygonTransDialog
 from labelme.widgets import Canvas
 from labelme.widgets import FileDialogPreview
 #from labelme.widgets import LabelDialog
@@ -91,6 +92,13 @@ class MainWindow(QtWidgets.QMainWindow):
             config = get_config()
         self._config = config
         self._polyonList = []
+        temp = [{
+            "label_display": "미정-미정",
+            "label": "미정",
+            "grade": "미정",
+            "color": "#ff0000"
+        }]
+        self._polyonList = temp
 
         # set default shape colors
         Shape.line_color = QtGui.QColor(*self._config["shape"]["line_color"])
@@ -841,6 +849,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fit_window = False
         self.zoom_values = {}  # key=filename, value=(zoom_mode, zoom_value)
         self.brightnessContrast_values = {}
+        self.polygonTrans_deta_value = 128
+        self.polygonTrans_value = 0
         self.scroll_values = {
             Qt.Horizontal: {},
             Qt.Vertical: {},
@@ -1189,7 +1199,80 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return False
 
+    def editLabels(self):
+        if len(self._polyonList) < 1:
+            return self.errorMessage(self.tr("Wrong Empty label"),
+                                     self.tr("please select one grade for label in Grade list"))
+        if not self.canvas.editing():
+            return
+
+        polyitems = copy.deepcopy(self._polyonList)
+
+        f_item = self.labelList.selectedItems()[0]
+        f_shape = None
+        if isinstance(f_item, QListWidgetItem):
+            f_shape_item = self.labelList.itemWidget(f_item)
+            if f_shape_item:
+                f_shape = f_shape_item._shape
+
+        if f_shape is None:
+            return
+
+        old_color = f_shape.color
+        assert isinstance(old_color, QtGui.QColor)
+
+        ritem = self.labelDialog.popUpLabelDlg(polyitems, f_shape, "edit")
+        if ritem is None:
+            return
+        if not self.validateLabel(ritem["label"]):
+            self.errorMessage(
+                self.tr("Invalid label"),
+                self.tr("Invalid label '{}' with validation type '{}'").format(
+                    ritem["label"], self._config["validate_label"]
+                ),
+            )
+            return
+
+        label = ritem["label"]
+        label_display = ritem["label_display"]
+        grade = ritem["grade"]
+        color = ritem["color"]
+
+
+        for item in self.labelList.selectedItems():
+            if isinstance(item, QListWidgetItem):
+                shape_item = self.labelList.itemWidget(item)
+                if shape_item:
+                    shape = shape_item._shape
+                    if shape is None:
+                        continue
+                    shape.label = label
+                    shape.label_display = label_display
+                    shape.grade = grade
+                    #shape.color = color
+                    old_a = old_color.alpha()
+
+                    sc = color if color else "cyan"
+                    Qc = QtGui.QColor(sc)
+                    r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
+                    shape.color = QtGui.QColor(r, g, b, old_a)
+
+                    self._update_shape_color(shape)
+                    if shape_item:
+                        if shape_item.label:
+                            shape_item.label.setText("#{}  {}".format(shape_item._id, shape.label_display))
+                            cls_txt = shape.color.name(QtGui.QColor.HexRgb)
+                            shape_item.clrlabel.setStyleSheet(
+                                "QLabel{border: 1px soild #aaa; background: %s;}" % cls_txt)
+
+        self.setDirty()
+
+
     def editLabel(self, item=None):
+        if len(self.labelList.selectedItems()) > 1:
+            self.editLabels()
+            return
+
         if item and not isinstance(item, CustomLabelListWidget):
             raise TypeError("item must be CustomLabelListWidget type")
 
@@ -1211,6 +1294,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 shape = shape_item._shape
         if shape is None:
             return
+        old_color = shape.color
+        assert isinstance(old_color, QtGui.QColor)
+
         polyitems = copy.deepcopy(self._polyonList)
         ritem = self.labelDialog.popUpLabelDlg(polyitems, shape, "edit")
         if ritem is None:
@@ -1228,13 +1314,22 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.label_display = ritem["label_display"]
         shape.grade = ritem["grade"]
         shape.color = ritem["color"]
+
+        old_a = old_color.alpha()
+
+        sc = shape.color if shape.color else "cyan"
+        Qc = QtGui.QColor(sc)
+        r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
+        shape.color = QtGui.QColor(r, g, b, old_a)
+
         self._update_shape_color(shape)
         # update label
         if shape_item:
             if shape_item.label:
                 shape_item.label.setText("#{}  {}".format(shape_item._id, shape.label_display))
+                cls_txt = shape.color.name(QtGui.QColor.HexRgb)
                 shape_item.clrlabel.setStyleSheet(
-                    "QLabel{border: 1px soild #aaa; background: %s;}" % shape.color)
+                    "QLabel{border: 1px soild #aaa; background: %s;}" % cls_txt)
 
 
         self.setDirty()
@@ -1288,7 +1383,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.delete.setEnabled(n_selected)
         self.actions.duplicate.setEnabled(n_selected)
         self.actions.copy.setEnabled(n_selected)
-        self.actions.edit.setEnabled(n_selected == 1)
+        # self.actions.edit.setEnabled(n_selected == 1) # edit for single
+        self.actions.edit.setEnabled(n_selected)  # add ckd 9/7/2022
 
     def addLabel(self, shape):
         # Add polygon list
@@ -1307,13 +1403,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def _update_shape_color(self, shape):
         sc = shape.color if shape.color else "cyan"
         Qc = QtGui.QColor(sc)
-        r, g, b = Qc.red(), Qc.green(), Qc.blue()
-        shape.line_color = QtGui.QColor(r, g, b)
-        shape.vertex_fill_color = QtGui.QColor(r, g, b)
+        r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
+        shape.color = QtGui.QColor(r, g, b, a)
+        shape.line_color = QtGui.QColor(r, g, b, a)
+        shape.vertex_fill_color = QtGui.QColor(r, g, b, a)
         shape.hvertex_fill_color = QtGui.QColor(255, 255, 255)
-        shape.fill_color = QtGui.QColor(r, g, b, 128)
-        shape.select_line_color = QtGui.QColor(255, 255, 255)
-        shape.select_fill_color = QtGui.QColor(r, g, b, 155)
+        shape.fill_color = QtGui.QColor(r, g, b, a)  # a=128
+        shape.select_line_color = QtGui.QColor(255, 255, 255, a)
+        shape.select_fill_color = QtGui.QColor(r, g, b, a + 27)  # a = 155
 
     def _get_rgb_by_label(self, label):
         if self._config["shape_color"] == "auto":
@@ -1349,6 +1446,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadLabels(self, shapes):
         s = []
+        inval = False
         for shape in shapes:
             try:
                 grade = shape["grade"]
@@ -1367,11 +1465,24 @@ class MainWindow(QtWidgets.QMainWindow):
             group_id = shape["group_id"]
             other_data = shape["other_data"]
 
+            Qc = QtGui.QColor(color)
+            r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
+            # print("load shape", str(a))
+            if inval is False:
+                if a >= self.polygonTrans_deta_value:
+                    self.polygonTrans_value = 0
+                else:
+                    self.polygonTrans_value = self.polygonTrans_deta_value - a
+                inval = True
+
+            color = QtGui.QColor(r, g, b, a if a < self.polygonTrans_deta_value else self.polygonTrans_deta_value)
+
             if not points:
                 # skip point-empty shape
                 continue
 
             shape = Shape(
+                self,
                 grade=grade,
                 label=label,
                 label_display=label_display,
@@ -1432,12 +1543,18 @@ class MainWindow(QtWidgets.QMainWindow):
             grade = s.grade.encode("utf-8") if PY2 else s.grade
             label_display = s.label_display.encode("utf-8") if PY2 else s.label_display
             label = s.label.encode("utf-8") if PY2 else s.label
+
+            cColor = QtGui.QColor(s.color if s.color else "cyan")
+            # r, g, b, a = cColor.red(), cColor.green(), cColor.blue(), cColor.alpha()
+            #print("save shape", str(a))
+
+            cnams_str = cColor.name(QtGui.QColor.HexArgb)
             data.update(
                 dict(
                     grade=grade,
                     label=label,
                     label_display=label_display,
-                    color=s.color if s.color else "cyan",
+                    color=cnams_str,
                     points=[(p.x(), p.y()) for p in s.points],
                     shape_type=s.shape_type,
                     group_id=s.group_id
@@ -1544,7 +1661,19 @@ class MainWindow(QtWidgets.QMainWindow):
         if item:
             self.labelList.clearSelection()
             shape = self.canvas.setLastLabel(item)
+
             shape.group_id = group_id
+            sc = shape.color if shape.color else "cyan"
+            Qc = QtGui.QColor(sc)
+            r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
+            shape.color = QtGui.QColor(r, g, b, a)
+            if self.polygonTrans_value > 0:
+                a = self.polygonTrans_deta_value - self.polygonTrans_value
+            else:
+                a = self.polygonTrans_deta_value
+            shape.color = QtGui.QColor(r, g, b, a)
+            # print("new shape", str(a))
+
             self.addLabel(shape)
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
@@ -1641,6 +1770,40 @@ class MainWindow(QtWidgets.QMainWindow):
         brightness = dialog.slider_brightness.value()
         contrast = dialog.slider_contrast.value()
         self.brightnessContrast_values[self.filename] = (brightness, contrast)
+
+
+    def PolygonAlpha(self):
+        dialog = PolygonTransDialog(
+            self.polygonTrans,
+            parent=self,
+        )
+        if self.polygonTrans_value:
+            dialog.slider_trans.setValue(self.polygonTrans_value)
+        dialog.exec_()
+        val = dialog.slider_trans.value()
+        self.polygonTrans_value = val
+        self.actions.save.setEnabled(True)
+
+
+    def polygonTrans(self, value):
+        if self.canvas.shapes and len(self.canvas.shapes) < 1:
+            return
+
+        for shape in self.canvas.shapes:
+            #print(sp.line_color)
+            Qc = QtGui.QColor(shape.color)
+            r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
+            alpha = self.polygonTrans_deta_value - value
+            shape.color = QtGui.QColor(r, g, b, alpha)
+            shape.line_color = QtGui.QColor(r, g, b, alpha)
+            shape.fill_color = QtGui.QColor(r, g, b, alpha)
+            shape.vertex_fill_color = QtGui.QColor(r, g, b, alpha)
+            # shape.hvertex_fill_color = QtGui.QColor(255, 255, 255)
+            shape.select_line_color = QtGui.QColor(255, 255, 255, alpha + 27)
+            shape.select_fill_color = QtGui.QColor(r, g, b, alpha + 27)  # a = 155
+
+        self.canvas.update()
+
 
     def togglePolygons(self, value):
         self.labelList.checkStatus(1 if value else 0)
@@ -1811,8 +1974,12 @@ class MainWindow(QtWidgets.QMainWindow):
         h1 = self.centralWidget().height() - e
         a1 = w1 / h1
         # Calculate a new scale value based on the pixmap's aspect ratio.
-        w2 = self.canvas.pixmap.width() - 0.0
-        h2 = self.canvas.pixmap.height() - 0.0
+        if self.canvas:
+            w2 = self.canvas.pixmap.width() - 0.0
+            h2 = self.canvas.pixmap.height() - 0.0
+        else:
+            w2 = w1
+            h2 = h1
         a2 = w2 / h2
         return w1 / w2 if a2 >= a1 else h1 / h2
 
@@ -2356,8 +2523,12 @@ class MainWindow(QtWidgets.QMainWindow):
             if jsstr['message'] == 'success':
                 items = jsstr['items']
                 #print("products is ", items)
-                if items is not None:
+                if items and len(items) > 0:
                     self.loadProducts(items)
+                else:
+                    temp = [{"product": "미정"}]
+                    self.loadProducts(temp)
+
             else:
                 return QtWidgets.QMessageBox.critical(
                     self, "Error", "<p><b>%s</b></p>%s" % ("Error", jsstr['message'])
@@ -2374,8 +2545,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 try:
                     if self._polyonList is not None:
                         self._polyonList.clear()
+                    else:
+                        self._polyonList = []
+
                     if items and len(items) > 0:
                         self._polyonList = items
+                    else:
+                        temp = [{
+                            "label_display": "미정-미정",
+                            "label": "미정",
+                            "grade": "미정",
+                            "color": "#ff0000"
+                        }]
+                        self._polyonList = temp
                 except AttributeError:
                     pass
             else:
@@ -2402,8 +2584,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if jsstr['message'] == 'success':
             items = jsstr['items']
             # print("All products is ", items)
-            if items is not None:
+            if items and len(items) > 0:
                 self.loadProducts(items)
+            else:
+                temp = [{"product": "미정"}]
+                self.loadProducts(temp)
         else:
             return QtWidgets.QMessageBox.critical(
                 self, "Error", "<p><b>%s</b></p>%s" % ("Error", jsstr['message'])

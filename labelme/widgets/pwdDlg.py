@@ -2,6 +2,7 @@ import threading
 
 from PyQt5.QtWidgets import QDesktopWidget, QWidget
 from qtpy import QtWidgets
+from qtpy.QtCore import Qt
 from qtpy import QtGui, QtCore
 from labelme.utils.qt import httpReq
 from labelme.utils import newIcon
@@ -30,6 +31,7 @@ class PwdDLG(QtWidgets.QDialog):
         self.setLayout(v_mainlayout)
         self.setWindowTitle(self.tr('Change Password'))
         self.setWindowIcon(newIcon("chg_pwd"))
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         # self.setWindowFlag(QtCore.Qt.WindowType.WindowContextHelpButtonHint | QtCore.Qt.WindowType.WindowCloseButtonHint)
         self.setFixedSize(400, 300)
         qr = self.frameGeometry()
