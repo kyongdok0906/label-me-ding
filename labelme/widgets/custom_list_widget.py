@@ -430,7 +430,7 @@ class topToolWidget(QtWidgets.QWidget):
         self.trans = QToolButton()
         self.trans.setIcon(utils.newIcon("ftrans"))
         self.trans.setIconSize(QtCore.QSize(20, 20))
-        self.trans.clicked.connect(self._app.PolygonAlpha)
+        self.trans.clicked.connect(self.transClick)
         self.trans.setEnabled(False)
 
         hbox_layout.addSpacing(20)
@@ -492,15 +492,17 @@ class topToolWidget(QtWidgets.QWidget):
         self._app.canvas.overrideCursor(QtCore.Qt.ArrowCursor)
 
     def transClick(self):
-        pass
+        self.trans.setEnabled(False)
+        self._app.PolygonAlpha(self.trans)
 
-    def editmodeClick(self):
-        self.polygon.setEnabled(True)
-        self.rect.setEnabled(True)
-        self.circle.setEnabled(True)
-        self.line.setEnabled(True)
-        self.arrow.setEnabled(True)
-        self.trans.setEnabled(True)
+    def editmodeClick(self, value):
+        self.polygon.setEnabled(value)
+        self.rect.setEnabled(value)
+        self.circle.setEnabled(value)
+        self.line.setEnabled(value)
+        self.arrow.setEnabled(value)
+        self.trans.setEnabled(value)
+
 
     def eventFromMenu(self, mode):
         if mode == "polygon":

@@ -1109,7 +1109,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.actions.createPointMode.setEnabled(True)
             self.actions.createLineStripMode.setEnabled(True)
 
-            self.topToolWidget.editmodeClick()
+            self.topToolWidget.editmodeClick(True)
         else:
             if createMode == "polygon":
                 self.actions.createMode.setEnabled(False)
@@ -1409,7 +1409,7 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.vertex_fill_color = QtGui.QColor(r, g, b, a)
         shape.hvertex_fill_color = QtGui.QColor(255, 255, 255)
         shape.fill_color = QtGui.QColor(r, g, b, a)  # a=128
-        shape.select_line_color = QtGui.QColor(255, 255, 255, a)
+        shape.select_line_color = QtGui.QColor(255, 255, 255, a + 70)
         shape.select_fill_color = QtGui.QColor(r, g, b, a + 27)  # a = 155
 
     def _get_rgb_by_label(self, label):
@@ -1537,9 +1537,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def format_shape(s):
             data = s.other_data.copy()
-            #self._update_shape_color(s)
-            #line_rgba = s.line_color.rgba()
-            #fill_rgba = s.fill_color.rgba()
             grade = s.grade.encode("utf-8") if PY2 else s.grade
             label_display = s.label_display.encode("utf-8") if PY2 else s.label_display
             label = s.label.encode("utf-8") if PY2 else s.label
@@ -1772,16 +1769,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.brightnessContrast_values[self.filename] = (brightness, contrast)
 
 
-    def PolygonAlpha(self):
-        dialog = PolygonTransDialog(
+    def PolygonAlpha(self, transObj):
+        self.polygonAlphaDlg = PolygonTransDialog(
             self.polygonTrans,
             parent=self,
         )
         if self.polygonTrans_value:
-            dialog.slider_trans.setValue(self.polygonTrans_value)
-        dialog.exec_()
-        val = dialog.slider_trans.value()
+            self.polygonAlphaDlg.slider_trans.setValue(self.polygonTrans_value)
+        self.polygonAlphaDlg.exec_()
+
+        val = self.polygonAlphaDlg.slider_trans.value()
         self.polygonTrans_value = val
+        transObj.setEnabled(True)
         self.actions.save.setEnabled(True)
 
 
@@ -1790,17 +1789,17 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         for shape in self.canvas.shapes:
-            #print(sp.line_color)
             Qc = QtGui.QColor(shape.color)
             r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
             alpha = self.polygonTrans_deta_value - value
             shape.color = QtGui.QColor(r, g, b, alpha)
-            shape.line_color = QtGui.QColor(r, g, b, alpha)
-            shape.fill_color = QtGui.QColor(r, g, b, alpha)
-            shape.vertex_fill_color = QtGui.QColor(r, g, b, alpha)
+            # shape.line_color = QtGui.QColor(r, g, b, alpha + 50)
+            # shape.fill_color = QtGui.QColor(r, g, b, alpha)
+            # shape.vertex_fill_color = QtGui.QColor(r, g, b, alpha + 50)
             # shape.hvertex_fill_color = QtGui.QColor(255, 255, 255)
-            shape.select_line_color = QtGui.QColor(255, 255, 255, alpha + 27)
-            shape.select_fill_color = QtGui.QColor(r, g, b, alpha + 27)  # a = 155
+            # shape.select_line_color = QtGui.QColor(255, 255, 255, alpha + 50)
+            # shape.select_fill_color = QtGui.QColor(r, g, b, alpha + 27)  # a = 155
+            self._update_shape_color(shape)
 
         self.canvas.update()
 
@@ -1811,7 +1810,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def loadFile(self, filename=None):
         """Load the specified file, or the last opened file if None."""
         # changing fileListWidget loads file
-
         if filename in self.imageList and (
             self.fileListWidget.currentRow() != self.imageList.index(filename)
         ):
@@ -1942,7 +1940,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status(str(self.tr("Loaded %s")) % osp.basename(str(filename)))
 
         # add ckd
-        self.topToolWidget.editmodeClick()
+        self.topToolWidget.editmodeClick(True)
 
         return True
 
@@ -2236,6 +2234,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggleActions(False)
         self.canvas.setEnabled(False)
         self.actions.saveAs.setEnabled(False)
+
+        self.topToolWidget.editmodeClick(False)
+        self.polygonTrans_value = 0
+        if self.polygonAlphaDlg:
+            self.polygonAlphaDlg.label.setText("100%")
+        self.polygonAlphaDlg = None
 
     def getLabelFile(self):
         if self.filename.lower().endswith(".json"):

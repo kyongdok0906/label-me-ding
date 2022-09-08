@@ -25,7 +25,7 @@ class PolygonTransDialog(QtWidgets.QDialog):
         hvox_layout = QtWidgets.QHBoxLayout()
         self.label = QtWidgets.QLabel()
         self.label.setMidLineWidth(35)
-        self.label.setText("0%")
+        self.label.setText("100%")
 
 
         hvox_layout.addWidget(self.slider_trans)

@@ -57,7 +57,7 @@ class Shape(object):
         self.grade = grade
         self.label = label
         self.label_display = label_display
-        self.color = color
+        #self.color = color
         self.group_id = group_id
         self.points = []
         self.fill = False
@@ -77,17 +77,21 @@ class Shape(object):
         if color is not None:
             Qc = QtGui.QColor(color)
             r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
-            self.line_color = QtGui.QColor(r, g, b, a)
-            # The down part be added by ckd
-            self.vertex_fill_color = QtGui.QColor(r, g, b, a)
-            self.hvertex_fill_color = QtGui.QColor(255, 255, 255)
-            self.fill_color = QtGui.QColor(r, g, b, a)  # a=128
-            self.select_line_color = QtGui.QColor(255, 255, 255, a)
             if parent:
                 sa = a if a < parent.polygonTrans_deta_value else parent.polygonTrans_deta_value
             else:
                 sa = a if a < 128 else 128
-            self.select_fill_color = QtGui.QColor(r, g, b, sa + 27)  # a = 155
+                print("Error non parent in shape")
+
+            self.color = QtGui.QColor(r, g, b, sa)
+            assert parent is not None
+            parent._update_shape_color(self)
+            # self.line_color = QtGui.QColor(r, g, b, sa + 50)
+            # self.hvertex_fill_color = QtGui.QColor(255, 255, 255)
+            # self.fill_color = QtGui.QColor(r, g, b, a)  # a=128
+            # self.vertex_fill_color = QtGui.QColor(r, g, b, sa + 50)
+            # self.select_line_color = QtGui.QColor(255, 255, 255, sa + 50)
+            # self.select_fill_color = QtGui.QColor(r, g, b, sa + 27)  # a = 155
 
         self.shape_type = shape_type
 
