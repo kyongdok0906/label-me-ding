@@ -54,6 +54,7 @@ from labelme.widgets import topToolWidget
 from labelme.widgets.pwdDlg import PwdDLG
 from labelme.widgets import labelme2coco
 from labelme.utils import appFont
+from labelme.convert_coco_label import ConvertCoCOLabel
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -1252,7 +1253,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     #shape.color = color
                     old_a = old_color.alpha()
 
-                    sc = color if color else "cyan"
+                    sc = color if color else "#808000"
                     Qc = QtGui.QColor(sc)
                     r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
                     shape.color = QtGui.QColor(r, g, b, old_a)
@@ -1317,7 +1318,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         old_a = old_color.alpha()
 
-        sc = shape.color if shape.color else "cyan"
+        sc = shape.color if shape.color else "#808000"
         Qc = QtGui.QColor(sc)
         r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
         shape.color = QtGui.QColor(r, g, b, old_a)
@@ -1401,15 +1402,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.shape_dock.titleBarWidget().titleLabel.setText(prodT % self.labelList.count())
 
     def _update_shape_color(self, shape):
-        sc = shape.color if shape.color else "cyan"
+        sc = shape.color if shape.color else "#808000"
         Qc = QtGui.QColor(sc)
         r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
         shape.color = QtGui.QColor(r, g, b, a)
-        shape.line_color = QtGui.QColor(r, g, b, a)
+        la = int(a * 255 / 128)
+        shape.line_color = QtGui.QColor(r, g, b, la)
         shape.vertex_fill_color = QtGui.QColor(r, g, b, a)
         shape.hvertex_fill_color = QtGui.QColor(255, 255, 255)
         shape.fill_color = QtGui.QColor(r, g, b, a)  # a=128
-        shape.select_line_color = QtGui.QColor(255, 255, 255, a + 70)
+        shape.select_line_color = QtGui.QColor(255, 255, 255, a + 80)
         shape.select_fill_color = QtGui.QColor(r, g, b, a + 27)  # a = 155
 
     def _get_rgb_by_label(self, label):
@@ -1541,7 +1543,7 @@ class MainWindow(QtWidgets.QMainWindow):
             label_display = s.label_display.encode("utf-8") if PY2 else s.label_display
             label = s.label.encode("utf-8") if PY2 else s.label
 
-            cColor = QtGui.QColor(s.color if s.color else "cyan")
+            cColor = QtGui.QColor(s.color if s.color else "#808000")
             # r, g, b, a = cColor.red(), cColor.green(), cColor.blue(), cColor.alpha()
             #print("save shape", str(a))
 
@@ -1660,7 +1662,7 @@ class MainWindow(QtWidgets.QMainWindow):
             shape = self.canvas.setLastLabel(item)
 
             shape.group_id = group_id
-            sc = shape.color if shape.color else "cyan"
+            sc = shape.color if shape.color else "#808000"
             Qc = QtGui.QColor(sc)
             r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
             shape.color = QtGui.QColor(r, g, b, a)
@@ -1808,6 +1810,207 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList.checkStatus(1 if value else 0)
 
     def loadFile(self, filename=None):
+        """Load the specified file, or the last opened file if None."""
+        # changing fileListWidget loads file
+        if filename in self.imageList and (
+            self.fileListWidget.currentRow() != self.imageList.index(filename)
+        ):
+            self.fileListWidget.setCurrentRow(self.imageList.index(filename))
+            self.fileListWidget.repaint()
+            return
+
+        self.resetState()
+        self.canvas.setEnabled(False)
+        if filename is None:
+            filename = self.settings.value("filename", "")
+        filename = str(filename)
+        if not QtCore.QFile.exists(filename):
+            self.errorMessage(
+                self.tr("Error opening file"),
+                self.tr("No such file: <b>%s</b>") % filename,
+            )
+            return False
+        # assumes same name, but json extension
+        self.status(
+            str(self.tr("Loading %s...")) % osp.basename(str(filename))
+        )
+        cocofile = False
+        labelfile = False
+        coco_file = "{}_coco.{}".format(osp.splitext(filename)[0], "json")
+        if self.output_dir:
+            coco_file_without_path = osp.basename(coco_file)
+            cocofp = osp.join(self.output_dir, coco_file_without_path)
+
+        if QtCore.QFile.exists(coco_file) and ConvertCoCOLabel.is_coco_file(
+            coco_file
+        ):
+            cocofile = True
+
+        label_file = osp.splitext(filename)[0] + ".json"
+        if self.output_dir:
+            label_file_without_path = osp.basename(label_file)
+            label_file = osp.join(self.output_dir, label_file_without_path)
+        if QtCore.QFile.exists(label_file) and LabelFile.is_label_file(
+            label_file
+        ):
+            labelfile = True
+
+        if cocofile is True and labelfile is True:
+            try:
+                self.labelFile = LabelFile(label_file)
+            except LabelFileError as e:
+                self.errorMessage(
+                    self.tr("Error opening file"),
+                    self.tr(
+                        "<p><b>%s</b></p>"
+                        "<p>Make sure <i>%s</i> is a valid label file."
+                    )
+                    % (e, label_file),
+                )
+                # LogPrint("e : %s" % e)
+                self.status(self.tr("Error reading %s") % label_file)
+                return False
+            self.imageData = self.labelFile.imageData
+            self.imagePath = osp.join(
+                osp.dirname(label_file),
+                self.labelFile.imagePath,
+            )
+            self.otherData = self.labelFile.otherData
+        elif cocofile is False and labelfile is True:
+            try:
+                self.labelFile = LabelFile(label_file)
+            except LabelFileError as e:
+                self.errorMessage(
+                    self.tr("Error opening file"),
+                    self.tr(
+                        "<p><b>%s</b></p>"
+                        "<p>Make sure <i>%s</i> is a valid label file."
+                    )
+                    % (e, label_file),
+                )
+                # LogPrint("e : %s" % e)
+                self.status(self.tr("Error reading %s") % label_file)
+                return False
+            self.imageData = self.labelFile.imageData
+            self.imagePath = osp.join(
+                osp.dirname(label_file),
+                self.labelFile.imagePath,
+            )
+            self.otherData = self.labelFile.otherData
+        elif cocofile is True and labelfile is False:
+            ccls = ConvertCoCOLabel(coco_file, label_file)
+            label_file = ccls.save()
+            if QtCore.QFile.exists(label_file) and LabelFile.is_label_file(
+                    label_file
+            ):
+                try:
+                    self.labelFile = LabelFile(label_file)
+                except LabelFileError as e:
+                    self.errorMessage(
+                        self.tr("Error opening file"),
+                        self.tr(
+                            "<p><b>%s</b></p>"
+                            "<p>Make sure <i>%s</i> is a valid label file."
+                        )
+                        % (e, label_file),
+                    )
+                    # LogPrint("e : %s" % e)
+                    self.status(self.tr("Error reading %s") % label_file)
+                    return False
+                self.imageData = self.labelFile.imageData
+                self.imagePath = osp.join(
+                    osp.dirname(label_file),
+                    self.labelFile.imagePath,
+                )
+                self.otherData = self.labelFile.otherData
+        else:
+            self.imageData = LabelFile.load_image_file(filename)
+            if self.imageData:
+                self.imagePath = filename
+            self.labelFile = None
+
+        image = QtGui.QImage.fromData(self.imageData)
+
+        if image.isNull():
+            formats = [
+                "*.{}".format(fmt.data().decode())
+                for fmt in QtGui.QImageReader.supportedImageFormats()
+            ]
+            self.errorMessage(
+                self.tr("Error opening file"),
+                self.tr(
+                    "<p>Make sure <i>{0}</i> is a valid image file.<br/>"
+                    "Supported image formats: {1}</p>"
+                ).format(filename, ",".join(formats)),
+            )
+            self.status(self.tr("Error reading %s") % filename)
+            return False
+
+        self.image = image
+        self.filename = filename
+        if self._config["keep_prev"]:
+            prev_shapes = self.canvas.shapes
+        self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image))
+
+        if self.labelFile:
+            self.loadLabels(self.labelFile.shapes)
+        # part grades of here ckd
+
+        if self._config["keep_prev"] and self.noShapes():
+            self.loadShapes(prev_shapes, replace=False)
+            self.setDirty()
+        else:
+            self.setClean()
+        self.canvas.setEnabled(True)
+        # set zoom values
+        is_initial_load = not self.zoom_values
+        if self.filename in self.zoom_values:
+            self.zoomMode = self.zoom_values[self.filename][0]
+            self.setZoom(self.zoom_values[self.filename][1])
+        elif is_initial_load or not self._config["keep_prev_scale"]:
+            self.adjustScale(initial=True)
+        # set scroll values
+        for orientation in self.scroll_values:
+            if self.filename in self.scroll_values[orientation]:
+                self.setScroll(
+                    orientation, self.scroll_values[orientation][self.filename]
+                )
+        # set brightness contrast values
+        dialog = BrightnessContrastDialog(
+            utils.img_data_to_pil(self.imageData),
+            self.onNewBrightnessContrast,
+            parent=self,
+        )
+        brightness, contrast = self.brightnessContrast_values.get(
+            self.filename, (None, None)
+        )
+        if self._config["keep_prev_brightness"] and self.recentFiles:
+            brightness, _ = self.brightnessContrast_values.get(
+                self.recentFiles[0], (None, None)
+            )
+        if self._config["keep_prev_contrast"] and self.recentFiles:
+            _, contrast = self.brightnessContrast_values.get(
+                self.recentFiles[0], (None, None)
+            )
+        if brightness is not None:
+            dialog.slider_brightness.setValue(brightness)
+        if contrast is not None:
+            dialog.slider_contrast.setValue(contrast)
+        self.brightnessContrast_values[self.filename] = (brightness, contrast)
+        if brightness is not None or contrast is not None:
+            dialog.onNewValue(None)
+        self.paintCanvas()
+        self.addRecentFile(self.filename)
+        self.toggleActions(True)
+        self.canvas.setFocus()
+        self.status(str(self.tr("Loaded %s")) % osp.basename(str(filename)))
+
+        # add ckd
+        self.topToolWidget.editmodeClick(True)
+
+        return True
+
+    def loadFile_org(self, filename=None):
         """Load the specified file, or the last opened file if None."""
         # changing fileListWidget loads file
         if filename in self.imageList and (
@@ -2237,9 +2440,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.topToolWidget.editmodeClick(False)
         self.polygonTrans_value = 0
-        if self.polygonAlphaDlg:
-            self.polygonAlphaDlg.label.setText("100%")
-        self.polygonAlphaDlg = None
+        try:
+            if self.polygonAlphaDlg is not None:
+                self.polygonAlphaDlg.label.setText("100%")
+            self.polygonAlphaDlg = None
+        except AttributeError as a:
+            pass
+
 
     def getLabelFile(self):
         if self.filename.lower().endswith(".json"):

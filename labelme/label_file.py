@@ -104,7 +104,7 @@ class LabelFile(object):
                     )
                 )
 
-            if data["imageData"] is not None:
+            if data["imageData"] is not None and data["imageData"] != "":
                 imageData = base64.b64decode(data["imageData"])
                 if PY2 and QT4:
                     imageData = utils.img_data_to_png_data(imageData)
@@ -124,7 +124,7 @@ class LabelFile(object):
                     grade=s["grade"] if 'grade' in s else s["label"],
                     label=s["label"],
                     label_display=s["label_display"] if 'label_display' in s else s["label"],
-                    color=s["color"] if 'color' in s else "cyan",
+                    color=s["color"] if 'color' in s else "#808000",
                     points=s["points"],
                     shape_type=s.get("shape_type", "polygon"),
                     group_id=s.get("group_id"),

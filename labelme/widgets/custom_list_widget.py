@@ -214,7 +214,7 @@ class MyCustomWidget(QtWidgets.QWidget):
 
         c_txt = self._shape.color
         if not c_txt or "" == c_txt:
-            c_txt = "cyan"
+            c_txt = "#808000"
         Qc = QtGui.QColor(c_txt)
         r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
         tmpcolor = QtGui.QColor(r, g, b)

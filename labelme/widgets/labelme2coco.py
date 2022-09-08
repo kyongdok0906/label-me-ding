@@ -32,12 +32,14 @@ class labelme2coco(object):
                 data = json.load(fp)
                 self.images.append(self.image(data, num))
                 for shapes in data["shapes"]:
-                    label = shapes["label"].split("_")
-                    grade = shapes["grade"].split("_")
+                    label = shapes["label"]
+                    grade = shapes["grade"]
                     #if label not in self.label: ckd  This delete equal labels
                     #    self.label.append(label)
                     self.label.append(label)
-                    self.categories.append(self.category(grade, label))
+                    color = shapes["color"]
+                    shape_type = shapes["shape_type"]
+                    self.categories.append(self.category(grade, label, color, shape_type))
                     points = shapes["points"]
                     self.annotations.append(self.annotation(points, label, num))
                     self.annID += 1
@@ -100,11 +102,13 @@ class labelme2coco(object):
         category["name"] = label[0]
         return category
 
-    def category(self, grade, label):
+    def category(self, grade, label, color, shape_type):
         category = {}
-        category["supercategory"] = grade[0]
+        category["supercategory"] = grade
         category["id"] = len(self.categories)
-        category["name"] = label[0]
+        category["name"] = label
+        category["color"] = color
+        category["shape_type"] = shape_type
         return category
 
     def annotation(self, points, label, num):
@@ -120,7 +124,7 @@ class labelme2coco(object):
 
         annotation["bbox"] = list(map(float, self.getbbox(points)))
 
-        annotation["category_id"] = label[0]  # self.getcatid(label)
+        annotation["category_id"] = label  # self.getcatid(label)
         annotation["id"] = self.annID
         return annotation
 

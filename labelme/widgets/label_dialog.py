@@ -267,12 +267,12 @@ class DlgRowWidgetItem(QtWidgets.QWidget):
         label.setStyleSheet("QLabel { padding: 2px; }")
 
         color_label = QtWidgets.QLabel(self)
-        c_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "cyan"
+        c_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "#808000"
         Qc = QtGui.QColor(c_txt)
         r, g, b, a = Qc.red(), Qc.green(), Qc.blue(), Qc.alpha()
         tmpcolor = QtGui.QColor(r, g, b)
         color_txt = tmpcolor.name(QtGui.QColor.HexRgb)
-        #color_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "cyan"
+        #color_txt = self._shape["color"] if self._shape["color"] and self._shape["color"] != "" else "yellow"
 
         color_label.setText("")
         color_label.setStyleSheet("QLabel{border: 1px soild #aaa; background: %s;}" % color_txt)
@@ -544,7 +544,7 @@ class LabelSearchDialog(QtWidgets.QDialog):
 
     def colorOfitem(self, txt):
         if len(self._list_items) < 1:
-            return "cyan"
+            return "#808000"
         txt = self.deleteStrip(txt)
         for pitem in self._list_items:
             lb = pitem["label"]
