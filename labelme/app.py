@@ -1839,7 +1839,7 @@ class MainWindow(QtWidgets.QMainWindow):
         coco_file = "{}_coco.{}".format(osp.splitext(filename)[0], "json")
         if self.output_dir:
             coco_file_without_path = osp.basename(coco_file)
-            cocofp = osp.join(self.output_dir, coco_file_without_path)
+            coco_file = osp.join(self.output_dir, coco_file_without_path)
 
         if QtCore.QFile.exists(coco_file) and ConvertCoCOLabel.is_coco_file(
             coco_file
@@ -2010,7 +2010,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return True
 
-    def loadFile_org(self, filename=None):
+    def loadFile_(self, filename=None):
         """Load the specified file, or the last opened file if None."""
         # changing fileListWidget loads file
         if filename in self.imageList and (
